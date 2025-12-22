@@ -2,9 +2,9 @@
 <html lang="es">
 <head>
     <!-- AGREGAR ESTO DENTRO DE <head> -->
-<!-- Configuración especial para GitHub Pages -->
-<meta http-equiv="Content-Security-Policy" 
-      content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:;
+    <!-- Configuración especial para GitHub Pages -->
+        <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:;
                script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net;
                style-src 'self' 'unsafe-inline';
                connect-src 'self' *;
@@ -13,15 +13,15 @@
                font-src 'self' data: https:;">
                
 <!-- Para evitar problemas de caché -->
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+        <meta http-equiv="Pragma" content="no-cache">
+        <meta http-equiv="Expires" content="0">
 
 <!-- Para compatibilidad con iframe -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Expedientes - DIF</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Sistema de Expedientes - DIF</title>
     <style>
         * { 
             margin: 0; 
@@ -1421,7 +1421,7 @@
         }
 
         // ==============================================
-        // MÓDULO DE NOTIFICACIONES
+        // MÓDULO DE NOTIFICACIONES - MODIFICADO PARA MAILTO:
         // ==============================================
         function mostrarModalNotificaciones() {
             if (!adminConfig.sesionActiva) {
@@ -1444,8 +1444,8 @@
                 <div class="notificaciones-panel">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <div>
-                            <h3>📧 Enviar Notificaciones</h3>
-                            <p style="color: #666;">Seleccione destinatarios y escriba el mensaje</p>
+                            <h3>📧 Enviar Notificaciones por Outlook Web</h3>
+                            <p style="color: #666;">Seleccione destinatarios - Se abrirá Outlook Web para cada uno</p>
                         </div>
                         <div style="font-size: 14px; color: #666;">
                             <span id="contadorSeleccionados">0</span> usuarios seleccionados
@@ -1472,14 +1472,14 @@ A continuación se presenta un resumen de los expedientes que requieren atenció
 
 Por favor, revise los expedientes que se encuentran en estado de alerta o vencidos para tomar las acciones correspondientes.
 
-Puede acceder al sistema para ver detalles completos en: [URL_SISTEMA]
+Puede acceder al sistema para ver detalles completos en: ${window.location.href}
 
 Atentamente,
 División de Fiscalización y Liquidación Tributaria Extensiva
 Sistema de Seguimiento de Expedientes DIF
                         </textarea>
                         <div style="font-size: 12px; color: #666; margin-top: 5px;">
-                            <strong>Variables disponibles:</strong> [RESUMEN_AUTOMATICO] [URL_SISTEMA] [NOMBRE_USUARIO]
+                            <strong>Variables disponibles:</strong> [RESUMEN_AUTOMATICO] [NOMBRE_USUARIO]
                         </div>
                     </div>
                     
@@ -1522,12 +1522,22 @@ Sistema de Seguimiento de Expedientes DIF
                         </div>
                     </div>
                     
+                    <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                        <strong>⚠️ INSTRUCCIONES IMPORTANTES:</strong><br>
+                        <div style="margin-top: 10px; font-size: 14px;">
+                            • Se abrirá <strong>Outlook Web</strong> en nuevas pestañas<br>
+                            • Debe hacer clic en <strong>"Enviar" manualmente</strong> en cada correo<br>
+                            • No cierre las pestañas hasta enviar cada correo<br>
+                            • Se esperarán 3 segundos entre cada correo
+                        </div>
+                    </div>
+                    
                     <div class="modal-footer">
-                        <button class="btn btn-success" onclick="enviarNotificacionesReales()">
-                            📤 Enviar Notificaciones por Correo
+                        <button class="btn btn-success" onclick="enviarNotificacionesMailto()">
+                            📤 Abrir en Outlook Web (mailto)
                         </button>
-                        <button class="btn btn-warning" onclick="previsualizarNotificacion()">
-                            👁️ Previsualizar
+                        <button class="btn btn-warning" onclick="probarUnCorreo()">
+                            🧪 Probar con 1 usuario
                         </button>
                         <button class="btn" onclick="cerrarModalNotificaciones()">
                             Cancelar
@@ -1653,16 +1663,9 @@ Sistema de Seguimiento de Expedientes DIF
         }
 
         // ==============================================
-        // ENVÍO REAL DE NOTIFICACIONES
+        // ENVÍO POR MAILTO: - FUNCIÓN PRINCIPAL MODIFICADA
         // ==============================================
-        async function enviarNotificacionesReales() {
-            // Verificar configuración SMTP
-            if (!smtpConfig.servidor || !smtpConfig.email || !smtpConfig.password) {
-                mostrarNotificacion('⚠️ Configure el servidor SMTP primero', 'warning');
-                cambiarTabAdmin('configuracion');
-                return;
-            }
-            
+        async function enviarNotificacionesMailto() {
             // Obtener usuarios seleccionados
             const checkboxes = Array.from(document.querySelectorAll('.usuario-checkbox:checked'));
             if (checkboxes.length === 0) {
@@ -1689,16 +1692,22 @@ Sistema de Seguimiento de Expedientes DIF
                 return;
             }
             
-            const confirmacion = confirm(`¿Enviar notificaciones a ${usuariosConCorreo.length} destinatario(s)?\n\nSe enviarán correos reales a las direcciones registradas.`);
+            const confirmacion = confirm(
+                `¿Preparar ${usuariosConCorreo.length} correo(s) en Outlook Web?\n\n` +
+                `Se abrirán ${usuariosConCorreo.length} pestaña(s) de Outlook Web.\n` +
+                `DEBE hacer clic en "Enviar" manualmente en cada una.\n\n` +
+                `¿Desea continuar?`
+            );
+            
             if (!confirmacion) return;
             
-            // Mostrar progreso
-            mostrarProgresoEnvio(usuariosConCorreo.length);
+            // Mostrar panel de progreso
+            mostrarPanelProgresoMailto(usuariosConCorreo.length);
             
-            let enviadosExitosos = 0;
-            let errores = [];
+            // Enviar correos uno por uno con delay
+            let enviados = 0;
+            const total = usuariosConCorreo.length;
             
-            // Enviar correos uno por uno
             for (let i = 0; i < usuariosConCorreo.length; i++) {
                 const checkbox = usuariosConCorreo[i];
                 const usuario = {
@@ -1706,58 +1715,33 @@ Sistema de Seguimiento de Expedientes DIF
                     email: checkbox.dataset.email
                 };
                 
-                // Personalizar mensaje para cada usuario
-                const mensajePersonalizado = personalizarMensaje(mensajeBase, usuario);
+                // Personalizar mensaje
+                const mensajePersonalizado = personalizarMensajeParaMailto(mensajeBase, usuario);
                 
-                try {
-                    // INTENTAR ENVÍO REAL
-                    const resultado = await intentarEnvioCorreo(usuario.email, asunto, mensajePersonalizado);
-                    
-                    if (resultado.exito) {
-                        enviadosExitosos++;
-                        actualizarProgresoEnvio(i + 1, usuariosConCorreo.length, usuario.nombre, true);
-                    } else {
-                        errores.push(`${usuario.nombre}: ${resultado.error}`);
-                        actualizarProgresoEnvio(i + 1, usuariosConPorreo.length, usuario.nombre, false);
-                    }
-                    
-                    // Pequeña pausa para no saturar el servidor
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    
-                } catch (error) {
-                    errores.push(`${usuario.nombre}: Error inesperado`);
-                    console.error('Error enviando correo:', error);
+                // Abrir Outlook Web con mailto:
+                abrirMailto(usuario.email, asunto, mensajePersonalizado);
+                enviados++;
+                
+                // Actualizar progreso
+                actualizarProgresoMailto(enviados, total, usuario.nombre);
+                
+                // Esperar 3 segundos antes del siguiente (para no saturar)
+                if (i < usuariosConCorreo.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 3000));
                 }
             }
             
-            // Registrar en historial
-            const notificacion = {
-                id: Date.now(),
-                fecha: new Date().toISOString(),
-                asunto: asunto,
-                destinatarios: usuariosConCorreo.length,
-                enviadosExitosos: enviadosExitosos,
-                errores: errores.length,
-                estado: enviadosExitosos > 0 ? 'parcial' : 'error'
-            };
-            
-            if (enviadosExitosos === usuariosConCorreo.length) {
-                notificacion.estado = 'completo';
-            }
-            
-            guardarEnHistorialNotificaciones(notificacion);
-            actualizarEstadisticasNotificaciones();
-            
-            // Mostrar resumen
-            mostrarResumenEnvio(enviadosExitosos, usuariosConCorreo.length, errores);
+            // Mostrar mensaje final
+            setTimeout(() => {
+                mostrarMensajeFinalMailto(enviados, total);
+            }, 1000);
         }
 
-        function personalizarMensaje(mensajeBase, usuario) {
+        function personalizarMensajeParaMailto(mensajeBase, usuario) {
             let mensaje = mensajeBase;
             
             // Reemplazar variables
             mensaje = mensaje.replace(/\[NOMBRE_USUARIO\]/g, usuario.nombre);
-            mensaje = mensaje.replace(/\[URL_SISTEMA\]/g, window.location.href);
             
             // Generar resumen automático para el usuario
             const expedientesUsuario = expedientes.filter(e => e.responsable === usuario.nombre);
@@ -1775,86 +1759,67 @@ Sistema de Seguimiento de Expedientes DIF
             return mensaje;
         }
 
-        async function intentarEnvioCorreo(destinatario, asunto, mensaje) {
-            // EN PRODUCCIÓN: Reemplazar esto con código real de envío SMTP
+        function abrirMailto(destinatario, asunto, mensaje) {
+            // Codificar para URL
+            const asuntoCodificado = encodeURIComponent(asunto);
+            const mensajeCodificado = encodeURIComponent(mensaje);
             
-            // Opción 1: Usar EmailJS (si decides usarlo)
-            // return await enviarConEmailJS(destinatario, asunto, mensaje);
+            // Crear enlace mailto
+            const mailtoLink = `mailto:${destinatario}?subject=${asuntoCodificado}&body=${mensajeCodificado}`;
             
-            // Opción 2: Usar un endpoint de backend propio
-            // return await enviarConBackend(destinatario, asunto, mensaje);
+            // Abrir en nueva pestaña
+            window.open(mailtoLink, '_blank');
             
-            // Opción 3: Usar API de SharePoint si estás en Office 365
-            // return await enviarConSharePointAPI(destinatario, asunto, mensaje);
+            // Registrar en historial
+            registrarEnvioMailto(destinatario, asunto);
             
-            // Por ahora, simulamos éxito pero guardamos los detalles para que puedas implementar después
-            console.log('📧 Intento de envío a:', destinatario);
-            console.log('Asunto:', asunto);
-            console.log('Mensaje (primeras 200 chars):', mensaje.substring(0, 200) + '...');
-            
-            // Para desarrollo: Simular éxito/error aleatorio
-            const simularExito = Math.random() > 0.2; // 80% éxito en desarrollo
-            
-            if (simularExito) {
-                // Guardar en "cola de envíos" para que veas que se procesaría
-                const colaEnvio = JSON.parse(localStorage.getItem('dif_cola_envios') || '[]');
-                colaEnvio.push({
-                    fecha: new Date().toISOString(),
-                    destinatario: destinatario,
-                    asunto: asunto,
-                    mensaje: mensaje,
-                    estado: 'pendiente_real'
-                });
-                localStorage.setItem('dif_cola_envios', JSON.stringify(colaEnvio));
-                
-                return { exito: true, mensaje: 'Correo agregado a cola de envío' };
-            } else {
-                return { 
-                    exito: false, 
-                    error: 'Error simulado: Servidor SMTP no disponible en modo desarrollo' 
-                };
-            }
+            return true;
         }
 
-        function mostrarProgresoEnvio(total) {
+        function mostrarPanelProgresoMailto(total) {
             const contenido = document.getElementById('notificacionesContent');
+            
             contenido.innerHTML = `
                 <div class="notificaciones-panel">
-                    <div style="text-align: center; padding: 30px;">
-                        <div class="login-icon">📤</div>
-                        <h3>Enviando Notificaciones</h3>
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">📤</div>
+                        <h3>Preparando Correos en Outlook Web</h3>
                         <p style="color: #666; margin-bottom: 30px;">
-                            Enviando correos a ${total} destinatario(s)...
+                            Abriendo Outlook Web para ${total} destinatario(s)...
                         </p>
                         
-                        <div style="background: #f8f9fa; border-radius: 10px; padding: 20px;">
+                        <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                                 <span>Progreso:</span>
-                                <span id="progresoActual">0</span>/<span id="progresoTotal">${total}</span>
+                                <span id="progresoMailtoActual">0</span>/<span id="progresoMailtoTotal">${total}</span>
                             </div>
                             <div style="width: 100%; height: 20px; background: #e9ecef; border-radius: 10px; overflow: hidden;">
-                                <div id="barraProgreso" style="width: 0%; height: 100%; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); transition: width 0.3s;"></div>
+                                <div id="barraProgresoMailto" style="width: 0%; height: 100%; background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%); transition: width 0.3s;"></div>
                             </div>
                         </div>
                         
-                        <div id="detalleProgreso" style="margin-top: 20px; max-height: 200px; overflow-y: auto; text-align: left;">
+                        <div id="detalleProgresoMailto" style="margin-top: 20px; max-height: 250px; overflow-y: auto; text-align: left;">
                             <!-- Detalles se agregarán aquí -->
                         </div>
                         
-                        <div style="margin-top: 30px;">
-                            <button class="btn btn-danger" onclick="cancelarEnvio()">
-                                ❌ Cancelar Envío
-                            </button>
+                        <div style="margin-top: 30px; padding: 15px; background: #e7f3ff; border-radius: 8px;">
+                            <strong>📋 INSTRUCCIONES:</strong><br>
+                            <div style="margin-top: 10px; font-size: 14px;">
+                                1. Se abrirá una pestaña de Outlook Web por cada destinatario<br>
+                                2. <strong>Debe hacer clic en "Enviar" manualmente</strong> en cada correo<br>
+                                3. No cierre las pestañas hasta enviar todos los correos<br>
+                                4. Espere a que termine el proceso antes de cerrar esta ventana
+                            </div>
                         </div>
                     </div>
                 </div>
             `;
         }
 
-        function actualizarProgresoEnvio(actual, total, usuario, exito) {
-            const barra = document.getElementById('barraProgreso');
-            const progresoActual = document.getElementById('progresoActual');
-            const detalle = document.getElementById('detalleProgreso');
+        function actualizarProgresoMailto(actual, total, usuario) {
+            const barra = document.getElementById('barraProgresoMailto');
+            const progresoActual = document.getElementById('progresoMailtoActual');
+            const detalle = document.getElementById('detalleProgresoMailto');
             
             if (barra) barra.style.width = `${(actual / total) * 100}%`;
             if (progresoActual) progresoActual.textContent = actual;
@@ -1862,70 +1827,73 @@ Sistema de Seguimiento de Expedientes DIF
             if (detalle) {
                 const item = document.createElement('div');
                 item.style.cssText = `
-                    padding: 8px 12px;
-                    margin-bottom: 5px;
-                    background: ${exito ? '#d4edda' : '#f8d7da'};
-                    border-radius: 5px;
-                    border-left: 4px solid ${exito ? '#28a745' : '#dc3545'};
+                    padding: 10px 15px;
+                    margin-bottom: 8px;
+                    background: #d4edda;
+                    border-radius: 8px;
+                    border-left: 4px solid #28a745;
                     font-size: 14px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
                 `;
                 item.innerHTML = `
-                    ${exito ? '✅' : '❌'} ${usuario} 
-                    <span style="float: right; color: #666;">${exito ? 'Enviado' : 'Error'}</span>
+                    <div>
+                        <span style="font-weight: bold;">${usuario}</span><br>
+                        <span style="font-size: 12px; color: #666;">Correo preparado en Outlook Web</span>
+                    </div>
+                    <div style="font-size: 20px;">✅</div>
                 `;
                 detalle.appendChild(item);
                 detalle.scrollTop = detalle.scrollHeight;
             }
         }
 
-        function cancelarEnvio() {
-            mostrarNotificacion('⚠️ Envío cancelado por el usuario', 'warning');
-            mostrarPanelNotificaciones();
-        }
-
-        function mostrarResumenEnvio(exitosos, total, errores) {
-            let html = `
+        function mostrarMensajeFinalMailto(enviados, total) {
+            const contenido = document.getElementById('notificacionesContent');
+            
+            contenido.innerHTML = `
                 <div class="notificaciones-panel">
-                    <div style="text-align: center; padding: 20px;">
-                        <div class="login-icon">${exitosos === total ? '🎉' : exitosos > 0 ? '⚠️' : '❌'}</div>
-                        <h3>${exitosos === total ? '¡Envío Completado!' : exitosos > 0 ? 'Envío Parcial' : 'Envío Fallido'}</h3>
+                    <div style="text-align: center; padding: 30px;">
+                        <div style="font-size: 64px; margin-bottom: 20px;">🎉</div>
+                        <h3>¡Correos Preparados!</h3>
+                        <p style="color: #666; margin-bottom: 30px;">
+                            Se prepararon ${enviados} correo(s) en Outlook Web.
+                        </p>
                         
-                        <div style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                                <div style="background: white; padding: 15px; border-radius: 8px;">
-                                    <div style="font-size: 32px; font-weight: bold; color: #28a745;">${exitosos}</div>
-                                    <div style="color: #666;">Enviados exitosamente</div>
+                        <div style="background: #f8f9fa; border-radius: 10px; padding: 25px; margin-bottom: 25px;">
+                            <h4>📋 Pasos a seguir:</h4>
+                            <div style="text-align: left; margin-top: 15px;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                    <div style="background: #0078d4; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">1</div>
+                                    <span>Revise las pestañas abiertas de Outlook Web</span>
                                 </div>
-                                <div style="background: white; padding: 15px; border-radius: 8px;">
-                                    <div style="font-size: 32px; font-weight: bold; color: #dc3545;">${total - exitosos}</div>
-                                    <div style="color: #666;">Con error</div>
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                    <div style="background: #0078d4; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">2</div>
+                                    <span><strong>Haga clic en "Enviar" en cada correo</strong></span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                    <div style="background: #0078d4; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">3</div>
+                                    <span>Verifique que todos los correos se hayan enviado</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="background: #0078d4; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">4</div>
+                                    <span>Puede cerrar las pestañas después de enviar</span>
                                 </div>
                             </div>
-                            
-                            <div style="text-align: left;">
-                                <strong>Resumen:</strong>
-                                <ul style="margin-top: 10px;">
-                                    <li>Total destinatarios: ${total}</li>
-                                    <li>Correos enviados: ${exitosos}</li>
-                                    <li>Errores: ${total - exitosos}</li>
-                                    <li>Tasa de éxito: ${Math.round((exitosos / total) * 100)}%</li>
-                                </ul>
+                        </div>
+                        
+                        <div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6;">
+                                <div style="font-size: 32px; font-weight: bold; color: #28a745;">${enviados}</div>
+                                <div style="color: #666;">Correos preparados</div>
+                            </div>
+                            <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6;">
+                                <div style="font-size: 32px; font-weight: bold; color: #ffc107;">${total}</div>
+                                <div style="color: #666;">Destinatarios totales</div>
                             </div>
                         </div>
-            `;
-            
-            if (errores.length > 0) {
-                html += `
-                    <div style="margin-top: 20px; text-align: left;">
-                        <strong>Detalles de errores:</strong>
-                        <div style="margin-top: 10px; max-height: 150px; overflow-y: auto; background: #f8d7da; padding: 10px; border-radius: 5px;">
-                            ${errores.map(error => `<div style="margin-bottom: 5px;">❌ ${error}</div>`).join('')}
-                        </div>
-                    </div>
-                `;
-            }
-            
-            html += `
+                        
                         <div style="margin-top: 30px;">
                             <button class="btn btn-primary" onclick="mostrarPanelNotificaciones()">
                                 ↩️ Volver al panel
@@ -1937,105 +1905,51 @@ Sistema de Seguimiento de Expedientes DIF
                     </div>
                 </div>
             `;
-            
-            document.getElementById('notificacionesContent').innerHTML = html;
         }
 
-        // ==============================================
-        // CONFIGURACIÓN SMTP
-        // ==============================================
-        function cargarConfiguracionSMTPForm() {
-            document.getElementById('smtpServer').value = smtpConfig.servidor;
-            document.getElementById('smtpPort').value = smtpConfig.puerto;
-            document.getElementById('smtpEmail').value = smtpConfig.email;
-            document.getElementById('smtpPassword').value = smtpConfig.password;
-            document.getElementById('smtpUseTLS').checked = smtpConfig.useTLS;
-            document.getElementById('smtpAuth').checked = smtpConfig.auth;
-        }
-
-        function guardarConfiguracionSMTP() {
-            smtpConfig = {
-                servidor: document.getElementById('smtpServer').value,
-                puerto: parseInt(document.getElementById('smtpPort').value) || 587,
-                email: document.getElementById('smtpEmail').value,
-                password: document.getElementById('smtpPassword').value,
-                useTLS: document.getElementById('smtpUseTLS').checked,
-                auth: document.getElementById('smtpAuth').checked
+        function registrarEnvioMailto(destinatario, asunto) {
+            const historial = obtenerHistorialNotificaciones();
+            const nuevoRegistro = {
+                id: Date.now(),
+                fecha: new Date().toISOString(),
+                metodo: 'mailto',
+                destinatario: destinatario,
+                asunto: asunto,
+                estado: 'preparado'
             };
             
-            localStorage.setItem('dif_smtp_config', JSON.stringify(smtpConfig));
-            mostrarNotificacion('✅ Configuración SMTP guardada', 'success');
+            historial.unshift(nuevoRegistro);
+            localStorage.setItem('dif_historial_notificaciones', JSON.stringify(historial.slice(0, 100)));
+            
+            actualizarEstadisticasNotificaciones();
         }
 
-        function cargarConfiguracionSMTP() {
-            const guardada = localStorage.getItem('dif_smtp_config');
-            if (guardada) {
-                try {
-                    smtpConfig = JSON.parse(guardada);
-                } catch (e) {
-                    console.error('Error cargando configuración SMTP:', e);
-                }
-            }
-        }
-
-        function probarConfiguracionSMTP() {
-            if (!smtpConfig.servidor || !smtpConfig.email || !smtpConfig.password) {
-                mostrarNotificacion('⚠️ Complete la configuración SMTP primero', 'warning');
+        // ==============================================
+        // FUNCIONES AUXILIARES PARA MAILTO:
+        // ==============================================
+        function probarUnCorreo() {
+            // Buscar cualquier usuario con correo
+            const usuarioConCorreo = usuariosDisponibles.find(u => u.email && u.email.includes('@'));
+            
+            if (!usuarioConCorreo) {
+                mostrarNotificacion('❌ No hay usuarios con correo para probar', 'error');
                 return;
             }
             
-            mostrarNotificacion('🧪 Probando conexión SMTP...', 'info');
+            const asunto = "Prueba Sistema DIF Expedientes";
+            const mensaje = `Estimado/a ${usuarioConCorreo.nombre},
+
+Esta es una prueba del sistema de notificaciones DIF.
+
+Si recibe este correo, el sistema funciona correctamente.
+
+Atentamente,
+Sistema de Seguimiento de Expedientes DIF
+${window.location.href}`;
+
+            abrirMailto(usuarioConCorreo.email, asunto, mensaje);
             
-            // En desarrollo, mostrar instrucciones
-            setTimeout(() => {
-                const instrucciones = `
-                📧 PRUEBA DE CONFIGURACIÓN SMTP
-                
-                Para que el envío de correos funcione en producción:
-                
-                1. 🏢 En SharePoint/Office 365:
-                   • Servidor: smtp.office365.com
-                   • Puerto: 587
-                   • TLS: Activado
-                   • Usar credenciales de Office 365
-                
-                2. 🖥️ En servidor propio:
-                   • Configure un servidor SMTP real
-                   • O use servicios como SendGrid, Amazon SES
-                
-                3. 🔧 Implementación backend:
-                   Esta aplicación necesita un backend para enviar correos.
-                   Opciones:
-                   a) Crear API en Node.js con Nodemailer
-                   b) Usar Azure Functions
-                   c) Usar Power Automate con SharePoint
-                
-                4. 🔐 Consideraciones de seguridad:
-                   • No almacene contraseñas en frontend
-                   • Use variables de entorno
-                   • Implemente autenticación segura
-                
-                Para desarrollo actual, los correos se simulan pero se registran en localStorage.
-                `;
-                
-                alert(instrucciones);
-            }, 1000);
-        }
-
-        // ==============================================
-        // HISTORIAL DE NOTIFICACIONES
-        // ==============================================
-        function obtenerHistorialNotificaciones() {
-            const historialGuardado = localStorage.getItem('dif_historial_notificaciones');
-            return historialGuardado ? JSON.parse(historialGuardado) : [];
-        }
-
-        function guardarEnHistorialNotificaciones(notificacion) {
-            let historial = obtenerHistorialNotificaciones();
-            historial.unshift(notificacion);
-            // Mantener solo las últimas 100 notificaciones
-            historial = historial.slice(0, 100);
-            localStorage.setItem('dif_historial_notificaciones', JSON.stringify(historial));
+            mostrarNotificacion(`✅ Correo de prueba preparado para ${usuarioConCorreo.nombre}`, 'success');
         }
 
         // ==============================================
@@ -2117,962 +2031,950 @@ Sistema de Seguimiento de Expedientes DIF
             return 'Estado no determinado';
         }
 
-       // ==============================================
-// FUNCIONES DE PROCESAMIENTO DE ARCHIVOS - CORREGIDAS
-// ==============================================
+        // ==============================================
+        // FUNCIONES DE PROCESAMIENTO DE ARCHIVOS - CORREGIDAS
+        // ==============================================
 
-function handleFileUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const fileName = file.name.toLowerCase();
-    const esExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
-    const esCSV = fileName.endsWith('.csv');
-    
-    if (!esExcel && !esCSV) {
-        mostrarNotificacion('❌ Por favor, suba un archivo Excel (.xlsx, .xls) o CSV (.csv)', 'error');
-        return;
-    }
-    
-    archivoCargado = file;
-    
-    // Mostrar información del archivo
-    const fileInfoDiv = document.getElementById('fileInfo');
-    const fileNameSpan = document.getElementById('fileName');
-    const fileSizeSpan = document.getElementById('fileSize');
-    const fileTypeSpan = document.getElementById('fileType');
-    const procesarBtn = document.getElementById('procesarBtn');
-    
-    if (fileInfoDiv) fileInfoDiv.style.display = 'flex';
-    if (fileNameSpan) fileNameSpan.textContent = file.name;
-    if (fileSizeSpan) fileSizeSpan.textContent = `Tamaño: ${(file.size / 1024).toFixed(1)} KB`;
-    if (fileTypeSpan) fileTypeSpan.textContent = `Tipo: ${esExcel ? 'Excel' : 'CSV'}`;
-    if (procesarBtn) {
-        procesarBtn.disabled = false;
-        procesarBtn.textContent = '📋 Cargar al Sistema';
-    }
-    
-    mostrarNotificacion(`✅ Archivo "${file.name}" cargado correctamente`, 'success');
-}
-
-function eliminarArchivo() {
-    archivoCargado = null;
-    const fileInput = document.getElementById('fileInput');
-    const fileInfoDiv = document.getElementById('fileInfo');
-    const processingInfo = document.getElementById('processingInfo');
-    const procesarBtn = document.getElementById('procesarBtn');
-    
-    if (fileInput) fileInput.value = '';
-    if (fileInfoDiv) fileInfoDiv.style.display = 'none';
-    if (processingInfo) processingInfo.style.display = 'none';
-    if (procesarBtn) {
-        procesarBtn.disabled = true;
-        procesarBtn.textContent = '📋 Cargar al Sistema';
-    }
-    
-    mostrarNotificacion('🗑️ Archivo eliminado', 'success');
-}
-
-function procesarArchivo() {
-    if (!archivoCargado) {
-        mostrarNotificacion('⚠️ No hay archivo cargado', 'warning');
-        return;
-    }
-    
-    const fileName = archivoCargado.name.toLowerCase();
-    const esExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
-    
-    // Mostrar mensaje de procesamiento
-    const processingInfo = document.getElementById('processingInfo');
-    const processingText = document.getElementById('processingText');
-    const procesarBtn = document.getElementById('procesarBtn');
-    
-    if (processingInfo) processingInfo.style.display = 'block';
-    if (processingText) processingText.textContent = 'Procesando archivo, por favor espere...';
-    if (procesarBtn) {
-        procesarBtn.disabled = true;
-        procesarBtn.textContent = '⏳ Procesando...';
-    }
-    
-    const reader = new FileReader();
-    
-    reader.onload = function(e) {
-        try {
-            let expedientesCargados = [];
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
             
-            if (esExcel) {
-                expedientesCargados = procesarExcel(e.target.result);
-            } else {
-                expedientesCargados = procesarCSV(e.target.result);
+            const fileName = file.name.toLowerCase();
+            const esExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+            const esCSV = fileName.endsWith('.csv');
+            
+            if (!esExcel && !esCSV) {
+                mostrarNotificacion('❌ Por favor, suba un archivo Excel (.xlsx, .xls) o CSV (.csv)', 'error');
+                return;
             }
             
-            if (expedientesCargados.length === 0) {
+            archivoCargado = file;
+            
+            // Mostrar información del archivo
+            const fileInfoDiv = document.getElementById('fileInfo');
+            const fileNameSpan = document.getElementById('fileName');
+            const fileSizeSpan = document.getElementById('fileSize');
+            const fileTypeSpan = document.getElementById('fileType');
+            const procesarBtn = document.getElementById('procesarBtn');
+            
+            if (fileInfoDiv) fileInfoDiv.style.display = 'flex';
+            if (fileNameSpan) fileNameSpan.textContent = file.name;
+            if (fileSizeSpan) fileSizeSpan.textContent = `Tamaño: ${(file.size / 1024).toFixed(1)} KB`;
+            if (fileTypeSpan) fileTypeSpan.textContent = `Tipo: ${esExcel ? 'Excel' : 'CSV'}`;
+            if (procesarBtn) {
+                procesarBtn.disabled = false;
+                procesarBtn.textContent = '📋 Cargar al Sistema';
+            }
+            
+            mostrarNotificacion(`✅ Archivo "${file.name}" cargado correctamente`, 'success');
+        }
+
+        function eliminarArchivo() {
+            archivoCargado = null;
+            const fileInput = document.getElementById('fileInput');
+            const fileInfoDiv = document.getElementById('fileInfo');
+            const processingInfo = document.getElementById('processingInfo');
+            const procesarBtn = document.getElementById('procesarBtn');
+            
+            if (fileInput) fileInput.value = '';
+            if (fileInfoDiv) fileInfoDiv.style.display = 'none';
+            if (processingInfo) processingInfo.style.display = 'none';
+            if (procesarBtn) {
+                procesarBtn.disabled = true;
+                procesarBtn.textContent = '📋 Cargar al Sistema';
+            }
+            
+            mostrarNotificacion('🗑️ Archivo eliminado', 'success');
+        }
+
+        function procesarArchivo() {
+            if (!archivoCargado) {
+                mostrarNotificacion('⚠️ No hay archivo cargado', 'warning');
+                return;
+            }
+            
+            const fileName = archivoCargado.name.toLowerCase();
+            const esExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+            
+            // Mostrar mensaje de procesamiento
+            const processingInfo = document.getElementById('processingInfo');
+            const processingText = document.getElementById('processingText');
+            const procesarBtn = document.getElementById('procesarBtn');
+            
+            if (processingInfo) processingInfo.style.display = 'block';
+            if (processingText) processingText.textContent = 'Procesando archivo, por favor espere...';
+            if (procesarBtn) {
+                procesarBtn.disabled = true;
+                procesarBtn.textContent = '⏳ Procesando...';
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    let expedientesCargados = [];
+                    
+                    if (esExcel) {
+                        expedientesCargados = procesarExcel(e.target.result);
+                    } else {
+                        expedientesCargados = procesarCSV(e.target.result);
+                    }
+                    
+                    if (expedientesCargados.length === 0) {
+                        if (processingInfo) processingInfo.style.display = 'none';
+                        if (procesarBtn) {
+                            procesarBtn.disabled = false;
+                            procesarBtn.textContent = '📋 Cargar al Sistema';
+                        }
+                        mostrarNotificacion('❌ No se encontraron expedientes válidos en el archivo', 'error');
+                        return;
+                    }
+                    
+                    // EXTRAER USUARIOS DEL ARCHIVO
+                    const usuariosDelArchivo = extraerUsuariosDeExpedientes(expedientesCargados);
+                    
+                    // Combinar usuarios existentes con los nuevos
+                    const usuariosExistentes = usuariosDisponibles.filter(u => u.origen === 'manual');
+                    const nuevosUsuarios = usuariosDelArchivo.filter(nuevo => 
+                        !usuariosExistentes.some(existente => existente.nombre === nuevo.nombre)
+                    );
+                    
+                    usuariosDisponibles = [...usuariosExistentes, ...nuevosUsuarios];
+                    usuariosNotificacion = usuariosDisponibles.filter(u => u.activo);
+                    
+                    // Actualizar lista de usuarios
+                    cargarListaUsuarios();
+                    
+                    // Cargar expedientes
+                    expedientes = expedientesCargados;
+                    filteredExpedientes = [...expedientes];
+                    actualizarTabla();
+                    actualizarEstadisticas();
+                    if (typeof actualizarEstadisticasNotificaciones === 'function') {
+                        actualizarEstadisticasNotificaciones();
+                    }
+                    
+                    if (processingInfo) processingInfo.style.display = 'none';
+                    if (processingText) processingText.textContent = '';
+                    if (procesarBtn) procesarBtn.textContent = '✅ Cargado';
+                    
+                    mostrarNotificacion(`✅ ${expedientes.length} expedientes cargados - ${usuariosDelArchivo.length} usuarios detectados`, 'success');
+                    
+                    setTimeout(() => {
+                        cerrarModalConfiguracion();
+                    }, 2000);
+                    
+                } catch (error) {
+                    if (processingInfo) processingInfo.style.display = 'none';
+                    if (procesarBtn) {
+                        procesarBtn.disabled = false;
+                        procesarBtn.textContent = '📋 Cargar al Sistema';
+                    }
+                    mostrarNotificacion(`❌ Error al procesar el archivo: ${error.message}`, 'error');
+                    console.error('Error detallado:', error);
+                }
+            };
+            
+            reader.onerror = function() {
                 if (processingInfo) processingInfo.style.display = 'none';
                 if (procesarBtn) {
                     procesarBtn.disabled = false;
                     procesarBtn.textContent = '📋 Cargar al Sistema';
                 }
-                mostrarNotificacion('❌ No se encontraron expedientes válidos en el archivo', 'error');
-                return;
+                mostrarNotificacion('❌ Error al leer el archivo', 'error');
+            };
+            
+            if (esExcel) {
+                reader.readAsArrayBuffer(archivoCargado);
+            } else {
+                reader.readAsText(archivoCargado, 'UTF-8');
             }
-            
-            // EXTRAER USUARIOS DEL ARCHIVO
-            const usuariosDelArchivo = extraerUsuariosDeExpedientes(expedientesCargados);
-            
-            // Combinar usuarios existentes con los nuevos
-            const usuariosExistentes = usuariosDisponibles.filter(u => u.origen === 'manual');
-            const nuevosUsuarios = usuariosDelArchivo.filter(nuevo => 
-                !usuariosExistentes.some(existente => existente.nombre === nuevo.nombre)
-            );
-            
-            usuariosDisponibles = [...usuariosExistentes, ...nuevosUsuarios];
-            usuariosNotificacion = usuariosDisponibles.filter(u => u.activo);
-            
-            // Actualizar lista de usuarios
-            cargarListaUsuarios();
-            
-            // Cargar expedientes
-            expedientes = expedientesCargados;
-            filteredExpedientes = [...expedientes];
-            actualizarTabla();
-            actualizarEstadisticas();
-            if (typeof actualizarEstadisticasNotificaciones === 'function') {
-                actualizarEstadisticasNotificaciones();
-            }
-            
-            if (processingInfo) processingInfo.style.display = 'none';
-            if (processingText) processingText.textContent = '';
-            if (procesarBtn) procesarBtn.textContent = '✅ Cargado';
-            
-            mostrarNotificacion(`✅ ${expedientes.length} expedientes cargados - ${usuariosDelArchivo.length} usuarios detectados`, 'success');
-            
-            setTimeout(() => {
-                cerrarModalConfiguracion();
-            }, 2000);
-            
-        } catch (error) {
-            if (processingInfo) processingInfo.style.display = 'none';
-            if (procesarBtn) {
-                procesarBtn.disabled = false;
-                procesarBtn.textContent = '📋 Cargar al Sistema';
-            }
-            mostrarNotificacion(`❌ Error al procesar el archivo: ${error.message}`, 'error');
-            console.error('Error detallado:', error);
         }
-    };
-    
-    reader.onerror = function() {
-        if (processingInfo) processingInfo.style.display = 'none';
-        if (procesarBtn) {
-            procesarBtn.disabled = false;
-            procesarBtn.textContent = '📋 Cargar al Sistema';
-        }
-        mostrarNotificacion('❌ Error al leer el archivo', 'error');
-    };
-    
-    if (esExcel) {
-        reader.readAsArrayBuffer(archivoCargado);
-    } else {
-        reader.readAsText(archivoCargado, 'UTF-8');
-    }
-}
 
-function procesarExcel(data) {
-    console.log('🔧 Procesando archivo Excel...');
-    
-    try {
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
-        
-        console.log('📊 Datos Excel obtenidos:', jsonData.length, 'filas');
-        
-        if (jsonData.length < 2) {
-            throw new Error('El archivo Excel está vacío o solo tiene encabezados');
-        }
-        
-        // Obtener encabezados
-        const headers = jsonData[0].map(h => String(h || '').trim());
-        console.log('📝 Encabezados encontrados:', headers);
-        
-        // Buscar índices de columnas importantes
-        const encontrarIndice = (patrones) => {
-            for (const patron of patrones) {
-                const indice = headers.findIndex(h => 
-                    h && h.toString().toLowerCase().includes(patron.toLowerCase())
-                );
-                if (indice >= 0) return indice;
-            }
-            return -1;
-        };
-        
-        const colIndices = {
-            expediente: encontrarIndice(['expediente', 'numero', 'numexp', 'número', 'id', 'codigo']),
-            fechaApertura: encontrarIndice(['fecha apertura', 'fecha_apertura', 'apertura', 'fecha inicio', 'inicio']),
-            fechaReasignacion: encontrarIndice(['fecha reasignacion', 'fecha_reasignacion', 'reasignacion', 'fecha actualizacion']),
-            responsable: encontrarIndice(['responsable', 'nombre funcionario', 'funcionario', 'auditor', 'encargado', 'asignado']),
-            departamento: encontrarIndice(['departamento', 'area', 'seccion', 'division', 'unidad'])
-        };
-        
-        console.log('📍 Índices de columnas detectados:', colIndices);
-        
-        // Si no se encuentra columna de responsable, usar la primera columna con datos
-        if (colIndices.responsable === -1 && headers.length > 0) {
-            colIndices.responsable = 0;
-        }
-        
-        const result = [];
-        
-        // Procesar cada fila de datos
-        for (let i = 1; i < jsonData.length; i++) {
-            const row = jsonData[i];
-            if (!row || row.length === 0) continue;
+        function procesarExcel(data) {
+            console.log('🔧 Procesando archivo Excel...');
             
-            // Obtener valores de las columnas
-            const numeroExpediente = colIndices.expediente >= 0 ? String(row[colIndices.expediente] || '').trim() : '';
-            const fechaApertura = colIndices.fechaApertura >= 0 ? String(row[colIndices.fechaApertura] || '').trim() : '';
-            const fechaReasignacion = colIndices.fechaReasignacion >= 0 ? String(row[colIndices.fechaReasignacion] || '').trim() : '';
-            const responsable = colIndices.responsable >= 0 ? String(row[colIndices.responsable] || '').trim() : '';
-            const departamento = colIndices.departamento >= 0 ? String(row[colIndices.departamento] || '').trim() : '';
-            
-            // Solo procesar si tiene algún dato
-            if (numeroExpediente || responsable) {
-                // Calcular semaforización automática
-                const semaforo = calcularSemaforizacion(fechaApertura, fechaReasignacion);
-                
-                // Generar descripción basada en la semaforización
-                const descripcion = generarDescripcion(semaforo);
-                
-                result.push({
-                    id: result.length + 1,
-                    nombre: numeroExpediente || `Expediente ${result.length + 1}`,
-                    descripcion: descripcion,
-                    estado: semaforo.estado,
-                    tiempo: semaforo.tiempo,
-                    responsable: responsable || 'No asignado',
-                    departamento: departamento || 'No especificado',
-                    fechaRevision: semaforo.fechaBase,
-                    fechaApertura: fechaApertura,
-                    fechaReasignacion: fechaReasignacion,
-                    mesesFaltantes: semaforo.mesesFaltantes,
-                    mesesTranscurridos: semaforo.mesesTranscurridos
-                });
-            }
-        }
-        
-        console.log('✅ Total expedientes procesados:', result.length);
-        return result;
-        
-    } catch (error) {
-        console.error('❌ Error procesando Excel:', error);
-        throw new Error('Error al leer el archivo Excel: ' + error.message);
-    }
-}
-
-function procesarCSV(csvText) {
-    console.log('🔧 Procesando archivo CSV...');
-    
-    try {
-        const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
-        
-        if (lines.length < 2) {
-            throw new Error('El archivo CSV está vacío o solo tiene encabezados');
-        }
-        
-        const headers = parseCSVLine(lines[0]);
-        console.log('📝 Encabezados CSV:', headers);
-        
-        if (headers.length === 0) {
-            throw new Error('No se encontraron encabezados en la primera línea del archivo');
-        }
-        
-        // Buscar índices de columnas importantes
-        const encontrarIndice = (patrones) => {
-            for (const patron of patrones) {
-                const indice = headers.findIndex(h => 
-                    h && h.toString().toLowerCase().includes(patron.toLowerCase())
-                );
-                if (indice >= 0) return indice;
-            }
-            return -1;
-        };
-        
-        const colIndices = {
-            expediente: encontrarIndice(['expediente', 'numero', 'numexp', 'número', 'id', 'codigo']),
-            fechaApertura: encontrarIndice(['fecha apertura', 'fecha_apertura', 'apertura', 'fecha inicio', 'inicio']),
-            fechaReasignacion: encontrarIndice(['fecha reasignacion', 'fecha_reasignacion', 'reasignacion', 'fecha actualizacion']),
-            responsable: encontrarIndice(['responsable', 'nombre funcionario', 'funcionario', 'auditor', 'encargado', 'asignado']),
-            departamento: encontrarIndice(['departamento', 'area', 'seccion', 'division', 'unidad'])
-        };
-        
-        console.log('📍 Índices de columnas CSV detectados:', colIndices);
-        
-        // Si no se encuentra columna de responsable, usar la primera columna
-        if (colIndices.responsable === -1 && headers.length > 0) {
-            colIndices.responsable = 0;
-        }
-        
-        const result = [];
-        
-        // Procesar cada línea de datos
-        for (let i = 1; i < lines.length; i++) {
             try {
-                const values = parseCSVLine(lines[i]);
-                if (values.length === 0) continue;
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
                 
-                // Obtener valores de las columnas
-                const numeroExpediente = colIndices.expediente >= 0 ? String(values[colIndices.expediente] || '').trim() : '';
-                const fechaApertura = colIndices.fechaApertura >= 0 ? String(values[colIndices.fechaApertura] || '').trim() : '';
-                const fechaReasignacion = colIndices.fechaReasignacion >= 0 ? String(values[colIndices.fechaReasignacion] || '').trim() : '';
-                const responsable = colIndices.responsable >= 0 ? String(values[colIndices.responsable] || '').trim() : '';
-                const departamento = colIndices.departamento >= 0 ? String(values[colIndices.departamento] || '').trim() : '';
+                console.log('📊 Datos Excel obtenidos:', jsonData.length, 'filas');
                 
-                // Solo procesar si tiene algún dato
-                if (numeroExpediente || responsable) {
-                    // Calcular semaforización automática
-                    const semaforo = calcularSemaforizacion(fechaApertura, fechaReasignacion);
-                    
-                    // Generar descripción basada en la semaforización
-                    const descripcion = generarDescripcion(semaforo);
-                    
-                    result.push({
-                        id: result.length + 1,
-                        nombre: numeroExpediente || `Expediente ${result.length + 1}`,
-                        descripcion: descripcion,
-                        estado: semaforo.estado,
-                        tiempo: semaforo.tiempo,
-                        responsable: responsable || 'No asignado',
-                        departamento: departamento || 'No especificado',
-                        fechaRevision: semaforo.fechaBase,
-                        fechaApertura: fechaApertura,
-                        fechaReasignacion: fechaReasignacion
-                    });
+                if (jsonData.length < 2) {
+                    throw new Error('El archivo Excel está vacío o solo tiene encabezados');
                 }
                 
-            } catch (error) {
-                console.error('Error parseando línea CSV', i, ':', error);
-            }
-        }
-        
-        console.log('✅ Total expedientes CSV:', result.length);
-        return result;
-        
-    } catch (error) {
-        console.error('❌ Error procesando CSV:', error);
-        throw new Error('Error al leer el archivo CSV: ' + error.message);
-    }
-}
-
-function parseCSVLine(line) {
-    const result = [];
-    let current = '';
-    let inQuotes = false;
-    
-    for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        const nextChar = line[i + 1];
-        
-        if (char === '"') {
-            if (inQuotes && nextChar === '"') {
-                current += '"';
-                i++;
-            } else {
-                inQuotes = !inQuotes;
-            }
-        } else if (char === ',' && !inQuotes) {
-            result.push(current.trim());
-            current = '';
-        } else {
-            current += char;
-        }
-    }
-    
-    result.push(current.trim());
-    
-    return result.map(field => {
-        if (field.startsWith('"') && field.endsWith('"')) {
-            return field.substring(1, field.length - 1);
-        }
-        return field;
-    });
-}
-
-function extraerUsuariosDeExpedientes(expedientesArray) {
-    console.log('👥 Extrayendo usuarios de expedientes...');
-    
-    const usuariosUnicos = [];
-    const usuariosMap = new Map();
-    
-    expedientesArray.forEach(expediente => {
-        const responsable = expediente.responsable;
-        if (responsable && responsable.trim() !== '' && responsable !== 'No asignado') {
-            if (!usuariosMap.has(responsable)) {
-                const usuarioId = usuariosUnicos.length + 1;
-                usuariosMap.set(responsable, usuarioId);
+                // Obtener encabezados
+                const headers = jsonData[0].map(h => String(h || '').trim());
+                console.log('📝 Encabezados encontrados:', headers);
                 
-                usuariosUnicos.push({
-                    id: usuarioId,
-                    nombre: responsable,
-                    email: `${responsable.toLowerCase().replace(/[^a-z0-9]/g, '.').replace(/\.+/g, '.')}@dif.gob.mx`,
-                    activo: true,
-                    origen: 'archivo'
-                });
+                // Buscar índices de columnas importantes
+                const encontrarIndice = (patrones) => {
+                    for (const patron of patrones) {
+                        const indice = headers.findIndex(h => 
+                            h && h.toString().toLowerCase().includes(patron.toLowerCase())
+                        );
+                        if (indice >= 0) return indice;
+                    }
+                    return -1;
+                };
+                
+                const colIndices = {
+                    expediente: encontrarIndice(['expediente', 'numero', 'numexp', 'número', 'id', 'codigo']),
+                    fechaApertura: encontrarIndice(['fecha apertura', 'fecha_apertura', 'apertura', 'fecha inicio', 'inicio']),
+                    fechaReasignacion: encontrarIndice(['fecha reasignacion', 'fecha_reasignacion', 'reasignacion', 'fecha actualizacion']),
+                    responsable: encontrarIndice(['responsable', 'nombre funcionario', 'funcionario', 'auditor', 'encargado', 'asignado']),
+                    departamento: encontrarIndice(['departamento', 'area', 'seccion', 'division', 'unidad'])
+                };
+                
+                console.log('📍 Índices de columnas detectados:', colIndices);
+                
+                // Si no se encuentra columna de responsable, usar la primera columna con datos
+                if (colIndices.responsable === -1 && headers.length > 0) {
+                    colIndices.responsable = 0;
+                }
+                
+                const result = [];
+                
+                // Procesar cada fila de datos
+                for (let i = 1; i < jsonData.length; i++) {
+                    const row = jsonData[i];
+                    if (!row || row.length === 0) continue;
+                    
+                    // Obtener valores de las columnas
+                    const numeroExpediente = colIndices.expediente >= 0 ? String(row[colIndices.expediente] || '').trim() : '';
+                    const fechaApertura = colIndices.fechaApertura >= 0 ? String(row[colIndices.fechaApertura] || '').trim() : '';
+                    const fechaReasignacion = colIndices.fechaReasignacion >= 0 ? String(row[colIndices.fechaReasignacion] || '').trim() : '';
+                    const responsable = colIndices.responsable >= 0 ? String(row[colIndices.responsable] || '').trim() : '';
+                    const departamento = colIndices.departamento >= 0 ? String(row[colIndices.departamento] || '').trim() : '';
+                    
+                    // Solo procesar si tiene algún dato
+                    if (numeroExpediente || responsable) {
+                        // Calcular semaforización automática
+                        const semaforo = calcularSemaforizacion(fechaApertura, fechaReasignacion);
+                        
+                        // Generar descripción basada en la semaforización
+                        const descripcion = generarDescripcion(semaforo);
+                        
+                        result.push({
+                            id: result.length + 1,
+                            nombre: numeroExpediente || `Expediente ${result.length + 1}`,
+                            descripcion: descripcion,
+                            estado: semaforo.estado,
+                            tiempo: semaforo.tiempo,
+                            responsable: responsable || 'No asignado',
+                            departamento: departamento || 'No especificado',
+                            fechaRevision: semaforo.fechaBase,
+                            fechaApertura: fechaApertura,
+                            fechaReasignacion: fechaReasignacion,
+                            mesesFaltantes: semaforo.mesesFaltantes,
+                            mesesTranscurridos: semaforo.mesesTranscurridos
+                        });
+                    }
+                }
+                
+                console.log('✅ Total expedientes procesados:', result.length);
+                return result;
+                
+            } catch (error) {
+                console.error('❌ Error procesando Excel:', error);
+                throw new Error('Error al leer el archivo Excel: ' + error.message);
             }
         }
-    });
-    
-    console.log(`✅ Usuarios únicos encontrados: ${usuariosUnicos.length}`);
-    return usuariosUnicos;
-}
 
-// ==============================================
-// FUNCIONES DE GESTIÓN DE FECHAS
-// ==============================================
+        function procesarCSV(csvText) {
+            console.log('🔧 Procesando archivo CSV...');
+            
+            try {
+                const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
+                
+                if (lines.length < 2) {
+                    throw new Error('El archivo CSV está vacío o solo tiene encabezados');
+                }
+                
+                const headers = parseCSVLine(lines[0]);
+                console.log('📝 Encabezados CSV:', headers);
+                
+                if (headers.length === 0) {
+                    throw new Error('No se encontraron encabezados en la primera línea del archivo');
+                }
+                
+                // Buscar índices de columnas importantes
+                const encontrarIndice = (patrones) => {
+                    for (const patron of patrones) {
+                        const indice = headers.findIndex(h => 
+                            h && h.toString().toLowerCase().includes(patron.toLowerCase())
+                        );
+                        if (indice >= 0) return indice;
+                    }
+                    return -1;
+                };
+                
+                const colIndices = {
+                    expediente: encontrarIndice(['expediente', 'numero', 'numexp', 'número', 'id', 'codigo']),
+                    fechaApertura: encontrarIndice(['fecha apertura', 'fecha_apertura', 'apertura', 'fecha inicio', 'inicio']),
+                    fechaReasignacion: encontrarIndice(['fecha reasignacion', 'fecha_reasignacion', 'reasignacion', 'fecha actualizacion']),
+                    responsable: encontrarIndice(['responsable', 'nombre funcionario', 'funcionario', 'auditor', 'encargado', 'asignado']),
+                    departamento: encontrarIndice(['departamento', 'area', 'seccion', 'division', 'unidad'])
+                };
+                
+                console.log('📍 Índices de columnas CSV detectados:', colIndices);
+                
+                // Si no se encuentra columna de responsable, usar la primera columna
+                if (colIndices.responsable === -1 && headers.length > 0) {
+                    colIndices.responsable = 0;
+                }
+                
+                const result = [];
+                
+                // Procesar cada línea de datos
+                for (let i = 1; i < lines.length; i++) {
+                    try {
+                        const values = parseCSVLine(lines[i]);
+                        if (values.length === 0) continue;
+                        
+                        // Obtener valores de las columnas
+                        const numeroExpediente = colIndices.expediente >= 0 ? String(values[colIndices.expediente] || '').trim() : '';
+                        const fechaApertura = colIndices.fechaApertura >= 0 ? String(values[colIndices.fechaApertura] || '').trim() : '';
+                        const fechaReasignacion = colIndices.fechaReasignacion >= 0 ? String(values[colIndices.fechaReasignacion] || '').trim() : '';
+                        const responsable = colIndices.responsable >= 0 ? String(values[colIndices.responsable] || '').trim() : '';
+                        const departamento = colIndices.departamento >= 0 ? String(values[colIndices.departamento] || '').trim() : '';
+                        
+                        // Solo procesar si tiene algún dato
+                        if (numeroExpediente || responsable) {
+                            // Calcular semaforización automática
+                            const semaforo = calcularSemaforizacion(fechaApertura, fechaReasignacion);
+                            
+                            // Generar descripción basada en la semaforización
+                            const descripcion = generarDescripcion(semaforo);
+                            
+                            result.push({
+                                id: result.length + 1,
+                                nombre: numeroExpediente || `Expediente ${result.length + 1}`,
+                                descripcion: descripcion,
+                                estado: semaforo.estado,
+                                tiempo: semaforo.tiempo,
+                                responsable: responsable || 'No asignado',
+                                departamento: departamento || 'No especificado',
+                                fechaRevision: semaforo.fechaBase,
+                                fechaApertura: fechaApertura,
+                                fechaReasignacion: fechaReasignacion
+                            });
+                        }
+                        
+                    } catch (error) {
+                        console.error('Error parseando línea CSV', i, ':', error);
+                    }
+                }
+                
+                console.log('✅ Total expedientes CSV:', result.length);
+                return result;
+                
+            } catch (error) {
+                console.error('❌ Error procesando CSV:', error);
+                throw new Error('Error al leer el archivo CSV: ' + error.message);
+            }
+        }
 
-function cambiarFechaReferencia() {
-    const nuevaFechaStr = prompt('Ingrese nueva fecha de referencia (YYYY-MM-DD):', 
-                                 fechaReferencia.toISOString().split('T')[0]);
-    
-    if (nuevaFechaStr) {
-        const nuevaFecha = new Date(nuevaFechaStr);
-        if (!isNaN(nuevaFecha.getTime())) {
-            fechaReferencia = nuevaFecha;
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                const nextChar = line[i + 1];
+                
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            result.push(current.trim());
+            
+            return result.map(field => {
+                if (field.startsWith('"') && field.endsWith('"')) {
+                    return field.substring(1, field.length - 1);
+                }
+                return field;
+            });
+        }
+
+        function extraerUsuariosDeExpedientes(expedientesArray) {
+            console.log('👥 Extrayendo usuarios de expedientes...');
+            
+            const usuariosUnicos = [];
+            const usuariosMap = new Map();
+            
+            expedientesArray.forEach(expediente => {
+                const responsable = expediente.responsable;
+                if (responsable && responsable.trim() !== '' && responsable !== 'No asignado') {
+                    if (!usuariosMap.has(responsable)) {
+                        const usuarioId = usuariosUnicos.length + 1;
+                        usuariosMap.set(responsable, usuarioId);
+                        
+                        usuariosUnicos.push({
+                            id: usuarioId,
+                            nombre: responsable,
+                            email: `${responsable.toLowerCase().replace(/[^a-z0-9]/g, '.').replace(/\.+/g, '.')}@dif.gob.mx`,
+                            activo: true,
+                            origen: 'archivo'
+                        });
+                    }
+                }
+            });
+            
+            console.log(`✅ Usuarios únicos encontrados: ${usuariosUnicos.length}`);
+            return usuariosUnicos;
+        }
+
+        // ==============================================
+        // FUNCIONES DE GESTIÓN DE FECHAS
+        // ==============================================
+
+        function cambiarFechaReferencia() {
+            const nuevaFechaStr = prompt('Ingrese nueva fecha de referencia (YYYY-MM-DD):', 
+                                        fechaReferencia.toISOString().split('T')[0]);
+            
+            if (nuevaFechaStr) {
+                const nuevaFecha = new Date(nuevaFechaStr);
+                if (!isNaN(nuevaFecha.getTime())) {
+                    fechaReferencia = nuevaFecha;
+                    actualizarDisplayFechaReferencia();
+                    
+                    if (expedientes.length > 0) {
+                        recalcularTodosExpedientes();
+                    }
+                    
+                    mostrarNotificacion(`✅ Fecha de referencia actualizada a ${nuevaFechaStr}`, 'success');
+                } else {
+                    alert('❌ Fecha inválida. Use formato YYYY-MM-DD');
+                }
+            }
+        }
+
+        function usarFechaActual() {
+            const fechaActual = new Date();
+            fechaReferencia = fechaActual;
             actualizarDisplayFechaReferencia();
             
             if (expedientes.length > 0) {
                 recalcularTodosExpedientes();
             }
             
-            mostrarNotificacion(`✅ Fecha de referencia actualizada a ${nuevaFechaStr}`, 'success');
-        } else {
-            alert('❌ Fecha inválida. Use formato YYYY-MM-DD');
+            mostrarNotificacion(`✅ Fecha de referencia actualizada a fecha actual`, 'success');
         }
-    }
-}
 
-function usarFechaActual() {
-    const fechaActual = new Date();
-    fechaReferencia = fechaActual;
-    actualizarDisplayFechaReferencia();
-    
-    if (expedientes.length > 0) {
-        recalcularTodosExpedientes();
-    }
-    
-    mostrarNotificacion(`✅ Fecha de referencia actualizada a fecha actual`, 'success');
-}
-
-function recalcularTodosExpedientes() {
-    expedientes.forEach(exp => {
-        if (exp.fechaApertura || exp.fechaReasignacion) {
-            const semaforo = calcularSemaforizacion(exp.fechaApertura, exp.fechaReasignacion);
-            exp.estado = semaforo.estado;
-            exp.tiempo = semaforo.tiempo;
-            exp.descripcion = generarDescripcion(semaforo);
-            exp.fechaRevision = semaforo.fechaBase || exp.fechaRevision;
-        }
-    });
-    
-    filteredExpedientes = [...expedientes];
-    actualizarTabla();
-    actualizarEstadisticas();
-    
-    mostrarNotificacion(`✅ ${expedientes.length} expedientes recalculados`, 'success');
-}
-
-// ==============================================
-// FUNCIONES DE GESTIÓN DE USUARIOS
-// ==============================================
-
-function cargarListaUsuarios() {
-    const userList = document.getElementById('userList');
-    if (!userList) return;
-    
-    let html = '';
-    
-    if (usuariosDisponibles.length === 0) {
-        html = '<div style="text-align: center; padding: 20px; color: #666;">No hay usuarios detectados. Cargue un archivo primero.</div>';
-    } else {
-        usuariosDisponibles.forEach(user => {
-            html += `
-                <div class="user-item">
-                    <div class="user-info">
-                        <input type="checkbox" id="user-${user.id}" 
-                               ${user.activo ? 'checked' : ''}
-                               onchange="actualizarUsuarioNotificacion(${user.id}, this.checked)">
-                        <div>
-                            <strong>${user.nombre}</strong>
-                            <div style="font-size: 14px; color: #666;">${user.email || 'Sin email'} (${user.origen})</div>
-                        </div>
-                    </div>
-                    <div class="user-actions">
-                        <button class="btn-icon" onclick="editarUsuario(${user.id})" title="Editar">
-                            ✏️
-                        </button>
-                        <button class="btn-icon" onclick="eliminarUsuario(${user.id})" title="Eliminar" style="color: #dc3545;">
-                            🗑️
-                        </button>
-                    </div>
-                </div>
-            `;
-        });
-    }
-    
-    userList.innerHTML = html;
-    
-    usuariosNotificacion = usuariosDisponibles.filter(u => u.activo);
-}
-
-function actualizarUsuarioNotificacion(userId, activo) {
-    const user = usuariosDisponibles.find(u => u.id === userId);
-    if (user) {
-        user.activo = activo;
-        
-        if (activo && !usuariosNotificacion.some(u => u.id === userId)) {
-            usuariosNotificacion.push(user);
-        } else if (!activo) {
-            usuariosNotificacion = usuariosNotificacion.filter(u => u.id !== userId);
-        }
-    }
-}
-
-function agregarUsuario() {
-    const nombre = prompt("Nombre del nuevo usuario:");
-    if (!nombre) return;
-    
-    const email = prompt("Email del usuario (opcional):", "");
-    
-    const nuevoId = usuariosDisponibles.length > 0 
-        ? Math.max(...usuariosDisponibles.map(u => u.id)) + 1 
-        : 1;
-    
-    const nuevoUsuario = {
-        id: nuevoId,
-        nombre: nombre,
-        email: email || `${nombre.toLowerCase().replace(/\s+/g, '.')}@dif.gob.mx`,
-        activo: true,
-        origen: 'manual'
-    };
-    
-    usuariosDisponibles.push(nuevoUsuario);
-    usuariosNotificacion.push(nuevoUsuario);
-    
-    cargarListaUsuarios();
-    mostrarNotificacion(`✅ Usuario "${nombre}" agregado`, 'success');
-}
-
-function editarUsuario(userId) {
-    const user = usuariosDisponibles.find(u => u.id === userId);
-    if (!user) return;
-    
-    const nuevoNombre = prompt("Nuevo nombre del usuario:", user.nombre);
-    if (!nuevoNombre) return;
-    
-    const nuevoEmail = prompt("Nuevo email del usuario:", user.email || '');
-    
-    user.nombre = nuevoNombre;
-    user.email = nuevoEmail || user.email;
-    
-    cargarListaUsuarios();
-    mostrarNotificacion(`✅ Usuario "${nuevoNombre}" actualizado`, 'success');
-}
-
-function eliminarUsuario(userId) {
-    const user = usuariosDisponibles.find(u => u.id === userId);
-    if (!user) return;
-    
-    const confirmar = confirm(`¿Está seguro de eliminar al usuario "${user.nombre}"?`);
-    if (!confirmar) return;
-    
-    usuariosDisponibles = usuariosDisponibles.filter(u => u.id !== userId);
-    usuariosNotificacion = usuariosNotificacion.filter(u => u.id !== userId);
-    
-    cargarListaUsuarios();
-    mostrarNotificacion(`🗑️ Usuario "${user.nombre}" eliminado`, 'success');
-}
-
-function eliminarTodosUsuarios() {
-    if (usuariosDisponibles.length === 0) {
-        mostrarNotificacion('⚠️ No hay usuarios para eliminar', 'warning');
-        return;
-    }
-    
-    const confirmar = confirm(`¿Está seguro de eliminar TODOS los usuarios (${usuariosDisponibles.length})?`);
-    if (!confirmar) return;
-    
-    usuariosDisponibles = [];
-    usuariosNotificacion = [];
-    
-    cargarListaUsuarios();
-    mostrarNotificacion('🗑️ Todos los usuarios han sido eliminados', 'success');
-}
-
-// ==============================================
-// FUNCIONES PRINCIPALES DE LA INTERFAZ
-// ==============================================
-
-function actualizarTabla() {
-    const tbody = document.getElementById('table-body');
-    if (!tbody) return;
-    
-    if (filteredExpedientes.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="8" style="text-align: center; padding: 50px;">
-                    <div style="font-size: 18px; color: #666; margin-bottom: 20px;">
-                        No hay expedientes cargados
-                    </div>
-                    <div style="color: #888; margin-bottom: 20px;">
-                        Para comenzar, haga clic en ⚙️ Configuración y cargue un archivo Excel/CSV
-                    </div>
-                    <button class="btn btn-primary" onclick="mostrarLoginAdmin()">
-                        🔒 Solicitar Acceso
-                    </button>
-                </td>
-            </tr>
-        `;
-        return;
-    }
-    
-    let html = '';
-    filteredExpedientes.forEach((exp, index) => {
-        let badgeClass = '';
-        let estadoText = '';
-        
-        switch(exp.estado) {
-            case 'verde':
-                badgeClass = 'badge-verde';
-                estadoText = 'EN TIEMPO';
-                break;
-            case 'amarillo':
-                badgeClass = 'badge-amarillo';
-                estadoText = 'ALERTA';
-                break;
-            case 'naranja':
-                badgeClass = 'badge-naranja';
-                estadoText = 'PRÓXIMO';
-                break;
-            case 'rojo':
-                badgeClass = 'badge-rojo';
-                estadoText = 'VENCIDO';
-                break;
-            case 'sin_datos':
-                badgeClass = 'badge-amarillo';
-                estadoText = 'SIN DATOS';
-                break;
-            case 'error':
-                badgeClass = 'badge-rojo';
-                estadoText = 'ERROR';
-                break;
-            default:
-                badgeClass = 'badge-verde';
-                estadoText = 'EN TIEMPO';
-        }
-        
-        let tiempoClass = '';
-        if (exp.estado === 'rojo') tiempoClass = 'rojo';
-        else if (exp.estado === 'naranja') tiempoClass = 'naranja';
-        else if (exp.estado === 'amarillo') tiempoClass = 'amarillo';
-        else if (exp.estado === 'error') tiempoClass = 'rojo';
-        else tiempoClass = 'verde';
-        
-        html += `
-            <tr class="fade-in">
-                <td><strong>${exp.nombre}</strong></td>
-                <td>${exp.descripcion}</td>
-                <td><span class="status-badge ${badgeClass}">${estadoText}</span></td>
-                <td class="${tiempoClass}"><strong>${exp.tiempo}</strong></td>
-                <td>${exp.responsable}</td>
-                <td>${exp.departamento}</td>
-                <td>${exp.fechaRevision || 'No disponible'}</td>
-                <td>
-                    <button class="btn-icon" onclick="verDetalles(${exp.id})" title="Ver detalles">
-                        👁️
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
-    
-    tbody.innerHTML = html;
-}
-
-function actualizarEstadisticas() {
-    const total = expedientes.length;
-    const verdes = expedientes.filter(e => e.estado === 'verde').length;
-    const amarillos = expedientes.filter(e => e.estado === 'amarillo').length;
-    const naranjas = expedientes.filter(e => e.estado === 'naranja').length;
-    const rojos = expedientes.filter(e => e.estado === 'rojo').length;
-    
-    const totalCount = document.getElementById('total-count');
-    const verdeCount = document.getElementById('verde-count');
-    const amarilloCount = document.getElementById('amarillo-count');
-    const rojoCount = document.getElementById('rojo-count');
-    
-    if (totalCount) totalCount.textContent = total;
-    if (verdeCount) {
-        verdeCount.textContent = verdes;
-        verdeCount.className = 'stat-number verde';
-    }
-    if (amarilloCount) {
-        amarilloCount.textContent = amarillos + naranjas;
-        amarilloCount.className = 'stat-number amarillo';
-    }
-    if (rojoCount) {
-        rojoCount.textContent = rojos;
-        rojoCount.className = 'stat-number rojo';
-    }
-}
-
-function filtrarExpedientes() {
-    const searchInput = document.getElementById('search-input');
-    if (!searchInput) return;
-    
-    const searchTerm = searchInput.value.toLowerCase();
-    
-    if (!searchTerm) {
-        filteredExpedientes = [...expedientes];
-    } else {
-        filteredExpedientes = expedientes.filter(exp => 
-            (exp.nombre && exp.nombre.toLowerCase().includes(searchTerm)) ||
-            (exp.descripcion && exp.descripcion.toLowerCase().includes(searchTerm)) ||
-            (exp.responsable && exp.responsable.toLowerCase().includes(searchTerm)) ||
-            (exp.departamento && exp.departamento.toLowerCase().includes(searchTerm)) ||
-            (exp.estado && exp.estado.toLowerCase().includes(searchTerm))
-        );
-    }
-    
-    actualizarTabla();
-}
-
-function verDetalles(id) {
-    const expediente = expedientes.find(e => e.id === id);
-    if (!expediente) return;
-    
-    const detalles = `
-        📋 EXPEDIENTE: ${expediente.nombre}
-        
-        📝 Descripción: ${expediente.descripcion}
-        🎨 Estado: ${expediente.estado.toUpperCase()}
-        ⏰ Tiempo restante: ${expediente.tiempo}
-        👤 Responsable: ${expediente.responsable}
-        🏢 Departamento: ${expediente.departamento}
-        📅 Fecha base: ${expediente.fechaRevision}
-        📅 Fecha apertura: ${expediente.fechaApertura || 'No disponible'}
-        📅 Fecha reasignación: ${expediente.fechaReasignacion || 'No disponible'}
-        
-        ${expediente.estado === 'rojo' ? '⚠️ REQUIERE ATENCIÓN INMEDIATA' : ''}
-        ${expediente.estado === 'naranja' ? '🔸 Revisión próxima, planificar acciones' : ''}
-        ${expediente.mesesFaltantes ? `\n📊 Meses faltantes: ${expediente.mesesFaltantes.toFixed(1)}` : ''}
-    `;
-    
-    alert(detalles);
-}
-
-function limpiarDatos() {
-    if (expedientes.length === 0) {
-        mostrarNotificacion('⚠️ No hay datos para limpiar', 'warning');
-        return;
-    }
-    
-    const confirmar = confirm(`¿Está seguro de limpiar todos los datos (${expedientes.length} expedientes)?`);
-    if (!confirmar) return;
-    
-    expedientes = [];
-    filteredExpedientes = [];
-    archivoCargado = null;
-    
-    usuariosDisponibles = usuariosDisponibles.filter(u => u.origen === 'manual');
-    usuariosNotificacion = usuariosDisponibles.filter(u => u.activo);
-    
-    cargarListaUsuarios();
-    
-    const fileInput = document.getElementById('fileInput');
-    const fileInfo = document.getElementById('fileInfo');
-    
-    if (fileInput) fileInput.value = '';
-    if (fileInfo) fileInfo.style.display = 'none';
-    
-    actualizarTabla();
-    actualizarEstadisticas();
-    
-    mostrarNotificacion('🗑️ Todos los datos han sido eliminados', 'success');
-}
-
-function exportarExcel() {
-    if (expedientes.length === 0) {
-        mostrarNotificacion('⚠️ No hay datos para exportar', 'warning');
-        return;
-    }
-    
-    let csv = "Expediente,Descripción,Estado,Tiempo Restante,Responsable,Departamento,Fecha Base,Fecha Apertura,Fecha Reasignación,Meses Faltantes\n";
-    
-    expedientes.forEach(exp => {
-        const mesesFaltantes = exp.mesesFaltantes ? exp.mesesFaltantes.toFixed(1) : 'N/A';
-        csv += `"${exp.nombre}","${exp.descripcion}","${exp.estado}","${exp.tiempo}","${exp.responsable}","${exp.departamento}","${exp.fechaRevision || ''}","${exp.fechaApertura || ''}","${exp.fechaReasignacion || ''}","${mesesFaltantes}"\n`;
-    });
-    
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `expedientes_DIF_${fechaReferencia.toISOString().slice(0,10)}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    mostrarNotificacion('📥 Archivo CSV generado para Excel', 'success');
-}
-
-function guardarConfiguracion() {
-    const configuracion = {
-        usuarios: usuariosDisponibles,
-        usuariosActivos: usuariosNotificacion.map(u => u.id),
-        fechaReferencia: fechaReferencia.toISOString(),
-        fechaGuardado: new Date().toISOString()
-    };
-    
-    localStorage.setItem('dif_configuracion', JSON.stringify(configuracion));
-    
-    mostrarNotificacion('💾 Configuración guardada', 'success');
-    cerrarModalConfiguracion();
-}
-
-function cargarConfiguracionGuardada() {
-    const guardado = localStorage.getItem('dif_configuracion');
-    if (guardado) {
-        try {
-            const config = JSON.parse(guardado);
-            usuariosDisponibles = config.usuarios || [];
+        function recalcularTodosExpedientes() {
+            expedientes.forEach(exp => {
+                if (exp.fechaApertura || exp.fechaReasignacion) {
+                    const semaforo = calcularSemaforizacion(exp.fechaApertura, exp.fechaReasignacion);
+                    exp.estado = semaforo.estado;
+                    exp.tiempo = semaforo.tiempo;
+                    exp.descripcion = generarDescripcion(semaforo);
+                    exp.fechaRevision = semaforo.fechaBase || exp.fechaRevision;
+                }
+            });
             
-            if (config.usuariosActivos) {
+            filteredExpedientes = [...expedientes];
+            actualizarTabla();
+            actualizarEstadisticas();
+            
+            mostrarNotificacion(`✅ ${expedientes.length} expedientes recalculados`, 'success');
+        }
+
+        // ==============================================
+        // FUNCIONES DE GESTIÓN DE USUARIOS
+        // ==============================================
+
+        function cargarListaUsuarios() {
+            const userList = document.getElementById('userList');
+            if (!userList) return;
+            
+            let html = '';
+            
+            if (usuariosDisponibles.length === 0) {
+                html = '<div style="text-align: center; padding: 20px; color: #666;">No hay usuarios detectados. Cargue un archivo primero.</div>';
+            } else {
                 usuariosDisponibles.forEach(user => {
-                    user.activo = config.usuariosActivos.includes(user.id);
+                    html += `
+                        <div class="user-item">
+                            <div class="user-info">
+                                <input type="checkbox" id="user-${user.id}" 
+                                    ${user.activo ? 'checked' : ''}
+                                    onchange="actualizarUsuarioNotificacion(${user.id}, this.checked)">
+                                <div>
+                                    <strong>${user.nombre}</strong>
+                                    <div style="font-size: 14px; color: #666;">${user.email || 'Sin email'} (${user.origen})</div>
+                                </div>
+                            </div>
+                            <div class="user-actions">
+                                <button class="btn-icon" onclick="editarUsuario(${user.id})" title="Editar">
+                                    ✏️
+                                </button>
+                                <button class="btn-icon" onclick="eliminarUsuario(${user.id})" title="Eliminar" style="color: #dc3545;">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    `;
                 });
-                usuariosNotificacion = usuariosDisponibles.filter(u => u.activo);
             }
             
-            if (config.fechaReferencia) {
-                fechaReferencia = new Date(config.fechaReferencia);
+            userList.innerHTML = html;
+            
+            usuariosNotificacion = usuariosDisponibles.filter(u => u.activo);
+        }
+
+        function actualizarUsuarioNotificacion(userId, activo) {
+            const user = usuariosDisponibles.find(u => u.id === userId);
+            if (user) {
+                user.activo = activo;
+                
+                if (activo && !usuariosNotificacion.some(u => u.id === userId)) {
+                    usuariosNotificacion.push(user);
+                } else if (!activo) {
+                    usuariosNotificacion = usuariosNotificacion.filter(u => u.id !== userId);
+                }
+            }
+        }
+
+        function agregarUsuario() {
+            const nombre = prompt("Nombre del nuevo usuario:");
+            if (!nombre) return;
+            
+            const email = prompt("Email del usuario (opcional):", "");
+            
+            const nuevoId = usuariosDisponibles.length > 0 
+                ? Math.max(...usuariosDisponibles.map(u => u.id)) + 1 
+                : 1;
+            
+            const nuevoUsuario = {
+                id: nuevoId,
+                nombre: nombre,
+                email: email || `${nombre.toLowerCase().replace(/\s+/g, '.')}@dif.gob.mx`,
+                activo: true,
+                origen: 'manual'
+            };
+            
+            usuariosDisponibles.push(nuevoUsuario);
+            usuariosNotificacion.push(nuevoUsuario);
+            
+            cargarListaUsuarios();
+            mostrarNotificacion(`✅ Usuario "${nombre}" agregado`, 'success');
+        }
+
+        function editarUsuario(userId) {
+            const user = usuariosDisponibles.find(u => u.id === userId);
+            if (!user) return;
+            
+            const nuevoNombre = prompt("Nuevo nombre del usuario:", user.nombre);
+            if (!nuevoNombre) return;
+            
+            const nuevoEmail = prompt("Nuevo email del usuario:", user.email || '');
+            
+            user.nombre = nuevoNombre;
+            user.email = nuevoEmail || user.email;
+            
+            cargarListaUsuarios();
+            mostrarNotificacion(`✅ Usuario "${nuevoNombre}" actualizado`, 'success');
+        }
+
+        function eliminarUsuario(userId) {
+            const user = usuariosDisponibles.find(u => u.id === userId);
+            if (!user) return;
+            
+            const confirmar = confirm(`¿Está seguro de eliminar al usuario "${user.nombre}"?`);
+            if (!confirmar) return;
+            
+            usuariosDisponibles = usuariosDisponibles.filter(u => u.id !== userId);
+            usuariosNotificacion = usuariosNotificacion.filter(u => u.id !== userId);
+            
+            cargarListaUsuarios();
+            mostrarNotificacion(`🗑️ Usuario "${user.nombre}" eliminado`, 'success');
+        }
+
+        function eliminarTodosUsuarios() {
+            if (usuariosDisponibles.length === 0) {
+                mostrarNotificacion('⚠️ No hay usuarios para eliminar', 'warning');
+                return;
             }
             
-        } catch (e) {
-            console.error('Error cargando configuración:', e);
+            const confirmar = confirm(`¿Está seguro de eliminar TODOS los usuarios (${usuariosDisponibles.length})?`);
+            if (!confirmar) return;
+            
+            usuariosDisponibles = [];
+            usuariosNotificacion = [];
+            
+            cargarListaUsuarios();
+            mostrarNotificacion('🗑️ Todos los usuarios han sido eliminados', 'success');
         }
-    }
-}
 
-function mostrarNotificacion(mensaje, tipo) {
-    const notificacion = document.createElement('div');
-    notificacion.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 25px;
-        background: ${tipo === 'success' ? '#4CAF50' : tipo === 'warning' ? '#FF9800' : tipo === 'error' ? '#dc3545' : '#0078d4'};
-        color: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 1000;
-        animation: fadeIn 0.3s;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        max-width: 400px;
-    `;
-    
-    notificacion.innerHTML = `
-        ${tipo === 'success' ? '✅' : tipo === 'warning' ? '⚠️' : tipo === 'error' ? '❌' : 'ℹ️'}
-        <span>${mensaje}</span>
-    `;
-    
-    document.body.appendChild(notificacion);
-    
-    setTimeout(() => {
-        notificacion.style.animation = 'fadeOut 0.3s';
-        setTimeout(() => {
-            if (notificacion.parentNode) {
-                document.body.removeChild(notificacion);
+        // ==============================================
+        // FUNCIONES PRINCIPALES DE LA INTERFAZ
+        // ==============================================
+
+        function actualizarTabla() {
+            const tbody = document.getElementById('table-body');
+            if (!tbody) return;
+            
+            if (filteredExpedientes.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 50px;">
+                            <div style="font-size: 18px; color: #666; margin-bottom: 20px;">
+                                No hay expedientes cargados
+                            </div>
+                            <div style="color: #888; margin-bottom: 20px;">
+                                Para comenzar, haga clic en ⚙️ Configuración y cargue un archivo Excel/CSV
+                            </div>
+                            <button class="btn btn-primary" onclick="mostrarLoginAdmin()">
+                                🔒 Solicitar Acceso
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                return;
             }
-        }, 300);
-    }, 3000);
-    
-    if (!document.querySelector('style[data-notificaciones]')) {
-        const style = document.createElement('style');
-        style.setAttribute('data-notificaciones', '');
-        style.textContent = `
-            @keyframes fadeOut {
-                from { opacity: 1; transform: translateY(0); }
-                to { opacity: 0; transform: translateY(-10px); }
+            
+            let html = '';
+            filteredExpedientes.forEach((exp, index) => {
+                let badgeClass = '';
+                let estadoText = '';
+                
+                switch(exp.estado) {
+                    case 'verde':
+                        badgeClass = 'badge-verde';
+                        estadoText = 'EN TIEMPO';
+                        break;
+                    case 'amarillo':
+                        badgeClass = 'badge-amarillo';
+                        estadoText = 'ALERTA';
+                        break;
+                    case 'naranja':
+                        badgeClass = 'badge-naranja';
+                        estadoText = 'PRÓXIMO';
+                        break;
+                    case 'rojo':
+                        badgeClass = 'badge-rojo';
+                        estadoText = 'VENCIDO';
+                        break;
+                    case 'sin_datos':
+                        badgeClass = 'badge-amarillo';
+                        estadoText = 'SIN DATOS';
+                        break;
+                    case 'error':
+                        badgeClass = 'badge-rojo';
+                        estadoText = 'ERROR';
+                        break;
+                    default:
+                        badgeClass = 'badge-verde';
+                        estadoText = 'EN TIEMPO';
+                }
+                
+                let tiempoClass = '';
+                if (exp.estado === 'rojo') tiempoClass = 'rojo';
+                else if (exp.estado === 'naranja') tiempoClass = 'naranja';
+                else if (exp.estado === 'amarillo') tiempoClass = 'amarillo';
+                else if (exp.estado === 'error') tiempoClass = 'rojo';
+                else tiempoClass = 'verde';
+                
+                html += `
+                    <tr class="fade-in">
+                        <td><strong>${exp.nombre}</strong></td>
+                        <td>${exp.descripcion}</td>
+                        <td><span class="status-badge ${badgeClass}">${estadoText}</span></td>
+                        <td class="${tiempoClass}"><strong>${exp.tiempo}</strong></td>
+                        <td>${exp.responsable}</td>
+                        <td>${exp.departamento}</td>
+                        <td>${exp.fechaRevision || 'No disponible'}</td>
+                        <td>
+                            <button class="btn-icon" onclick="verDetalles(${exp.id})" title="Ver detalles">
+                                👁️
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+        }
+
+        function actualizarEstadisticas() {
+            const total = expedientes.length;
+            const verdes = expedientes.filter(e => e.estado === 'verde').length;
+            const amarillos = expedientes.filter(e => e.estado === 'amarillo').length;
+            const naranjas = expedientes.filter(e => e.estado === 'naranja').length;
+            const rojos = expedientes.filter(e => e.estado === 'rojo').length;
+            
+            const totalCount = document.getElementById('total-count');
+            const verdeCount = document.getElementById('verde-count');
+            const amarilloCount = document.getElementById('amarillo-count');
+            const rojoCount = document.getElementById('rojo-count');
+            
+            if (totalCount) totalCount.textContent = total;
+            if (verdeCount) {
+                verdeCount.textContent = verdes;
+                verdeCount.className = 'stat-number verde';
             }
-        `;
-        document.head.appendChild(style);
-    }
-}
-
-// ==============================================
-// FUNCIONES DE PRUEBA Y DEBUG
-// ==============================================
-
-function probarCargaSimple() {
-    alert('🔧 Probando carga de archivos...\n\n1. Haz clic en "Cargar Archivo"\n2. Selecciona un archivo Excel\n3. Haz clic en "Cargar al Sistema"');
-    
-    // Verificar elementos
-    const elementos = ['fileInput', 'fileInfo', 'procesarBtn'];
-    let todosExisten = true;
-    
-    elementos.forEach(id => {
-        const elem = document.getElementById(id);
-        if (!elem) {
-            console.error('❌ Elemento no encontrado:', id);
-            todosExisten = false;
-        } else {
-            console.log('✅ Elemento encontrado:', id);
+            if (amarilloCount) {
+                amarilloCount.textContent = amarillos + naranjas;
+                amarilloCount.className = 'stat-number amarillo';
+            }
+            if (rojoCount) {
+                rojoCount.textContent = rojos;
+                rojoCount.className = 'stat-number rojo';
+            }
         }
-    });
-    
-    if (todosExisten) {
-        console.log('✅ Todos los elementos necesarios existen');
-        console.log('✅ SheetJS cargado:', typeof XLSX !== 'undefined' ? 'SÍ' : 'NO');
-        alert('✅ Sistema listo para cargar archivos\n\nVerifica la consola (F12) para más detalles');
-    } else {
-        alert('❌ Problema detectado\n\nRevisa la consola (F12) para ver qué elementos faltan');
-    }
-}
 
-// ==============================================
-// INICIALIZACIÓN ADICIONAL
-// ==============================================
-
-// Agregar estilos para animaciones si no existen
-if (!document.querySelector('style[data-animaciones]')) {
-    const style = document.createElement('style');
-    style.setAttribute('data-animaciones', '');
-    style.textContent = `
-        .verde { color: #4CAF50 !important; }
-        .amarillo { color: #FFC107 !important; }
-        .naranja { color: #FF9800 !important; }
-        .rojo { color: #F44336 !important; }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        function filtrarExpedientes() {
+            const searchInput = document.getElementById('search-input');
+            if (!searchInput) return;
+            
+            const searchTerm = searchInput.value.toLowerCase();
+            
+            if (!searchTerm) {
+                filteredExpedientes = [...expedientes];
+            } else {
+                filteredExpedientes = expedientes.filter(exp => 
+                    (exp.nombre && exp.nombre.toLowerCase().includes(searchTerm)) ||
+                    (exp.descripcion && exp.descripcion.toLowerCase().includes(searchTerm)) ||
+                    (exp.responsable && exp.responsable.toLowerCase().includes(searchTerm)) ||
+                    (exp.departamento && exp.departamento.toLowerCase().includes(searchTerm)) ||
+                    (exp.estado && exp.estado.toLowerCase().includes(searchTerm))
+                );
+            }
+            
+            actualizarTabla();
         }
-        
-        @keyframes fadeOut {
-            from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(-10px); }
+
+        function verDetalles(id) {
+            const expediente = expedientes.find(e => e.id === id);
+            if (!expediente) return;
+            
+            const detalles = `
+                📋 EXPEDIENTE: ${expediente.nombre}
+                
+                📝 Descripción: ${expediente.descripcion}
+                🎨 Estado: ${expediente.estado.toUpperCase()}
+                ⏰ Tiempo restante: ${expediente.tiempo}
+                👤 Responsable: ${expediente.responsable}
+                🏢 Departamento: ${expediente.departamento}
+                📅 Fecha base: ${expediente.fechaRevision}
+                📅 Fecha apertura: ${expediente.fechaApertura || 'No disponible'}
+                📅 Fecha reasignación: ${expediente.fechaReasignacion || 'No disponible'}
+                
+                ${expediente.estado === 'rojo' ? '⚠️ REQUIERE ATENCIÓN INMEDIATA' : ''}
+                ${expediente.estado === 'naranja' ? '🔸 Revisión próxima, planificar acciones' : ''}
+                ${expediente.mesesFaltantes ? `\n📊 Meses faltantes: ${expediente.mesesFaltantes.toFixed(1)}` : ''}
+            `;
+            
+            alert(detalles);
         }
-    `;
-    document.head.appendChild(style);
-}
 
+        function limpiarDatos() {
+            if (expedientes.length === 0) {
+                mostrarNotificacion('⚠️ No hay datos para limpiar', 'warning');
+                return;
+            }
+            
+            const confirmar = confirm(`¿Está seguro de limpiar todos los datos (${expedientes.length} expedientes)?`);
+            if (!confirmar) return;
+            
+            expedientes = [];
+            filteredExpedientes = [];
+            archivoCargado = null;
+            
+            usuariosDisponibles = usuariosDisponibles.filter(u => u.origen === 'manual');
+            usuariosNotificacion = usuariosDisponibles.filter(u => u.activo);
+            
+            cargarListaUsuarios();
+            
+            const fileInput = document.getElementById('fileInput');
+            const fileInfo = document.getElementById('fileInfo');
+            
+            if (fileInput) fileInput.value = '';
+            if (fileInfo) fileInfo.style.display = 'none';
+            
+            actualizarTabla();
+            actualizarEstadisticas();
+            
+            mostrarNotificacion('🗑️ Todos los datos han sido eliminados', 'success');
+        }
 
+        function exportarExcel() {
+            if (expedientes.length === 0) {
+                mostrarNotificacion('⚠️ No hay datos para exportar', 'warning');
+                return;
+            }
+            
+            let csv = "Expediente,Descripción,Estado,Tiempo Restante,Responsable,Departamento,Fecha Base,Fecha Apertura,Fecha Reasignación,Meses Faltantes\n";
+            
+            expedientes.forEach(exp => {
+                const mesesFaltantes = exp.mesesFaltantes ? exp.mesesFaltantes.toFixed(1) : 'N/A';
+                csv += `"${exp.nombre}","${exp.descripcion}","${exp.estado}","${exp.tiempo}","${exp.responsable}","${exp.departamento}","${exp.fechaRevision || ''}","${exp.fechaApertura || ''}","${exp.fechaReasignacion || ''}","${mesesFaltantes}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `expedientes_DIF_${fechaReferencia.toISOString().slice(0,10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            mostrarNotificacion('📥 Archivo CSV generado para Excel', 'success');
+        }
 
-        // Estilos adicionales para animaciones
+        function guardarConfiguracion() {
+            const configuracion = {
+                usuarios: usuariosDisponibles,
+                usuariosActivos: usuariosNotificacion.map(u => u.id),
+                fechaReferencia: fechaReferencia.toISOString(),
+                fechaGuardado: new Date().toISOString()
+            };
+            
+            localStorage.setItem('dif_configuracion', JSON.stringify(configuracion));
+            
+            mostrarNotificacion('💾 Configuración guardada', 'success');
+            cerrarModalConfiguracion();
+        }
+
+        function cargarConfiguracionGuardada() {
+            const guardado = localStorage.getItem('dif_configuracion');
+            if (guardado) {
+                try {
+                    const config = JSON.parse(guardado);
+                    usuariosDisponibles = config.usuarios || [];
+                    
+                    if (config.usuariosActivos) {
+                        usuariosDisponibles.forEach(user => {
+                            user.activo = config.usuariosActivos.includes(user.id);
+                        });
+                        usuariosNotificacion = usuariosDisponibles.filter(u => u.activo);
+                    }
+                    
+                    if (config.fechaReferencia) {
+                        fechaReferencia = new Date(config.fechaReferencia);
+                    }
+                    
+                } catch (e) {
+                    console.error('Error cargando configuración:', e);
+                }
+            }
+        }
+
+        function obtenerHistorialNotificaciones() {
+            const historialGuardado = localStorage.getItem('dif_historial_notificaciones');
+            return historialGuardado ? JSON.parse(historialGuardado) : [];
+        }
+
+        function mostrarNotificacion(mensaje, tipo) {
+            const notificacion = document.createElement('div');
+            notificacion.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                background: ${tipo === 'success' ? '#4CAF50' : tipo === 'warning' ? '#FF9800' : tipo === 'error' ? '#dc3545' : '#0078d4'};
+                color: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 1000;
+                animation: fadeIn 0.3s;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                max-width: 400px;
+            `;
+            
+            notificacion.innerHTML = `
+                ${tipo === 'success' ? '✅' : tipo === 'warning' ? '⚠️' : tipo === 'error' ? '❌' : 'ℹ️'}
+                <span>${mensaje}</span>
+            `;
+            
+            document.body.appendChild(notificacion);
+            
+            setTimeout(() => {
+                notificacion.style.animation = 'fadeOut 0.3s';
+                setTimeout(() => {
+                    if (notificacion.parentNode) {
+                        document.body.removeChild(notificacion);
+                    }
+                }, 300);
+            }, 3000);
+            
+            if (!document.querySelector('style[data-notificaciones]')) {
+                const style = document.createElement('style');
+                style.setAttribute('data-notificaciones', '');
+                style.textContent = `
+                    @keyframes fadeOut {
+                        from { opacity: 1; transform: translateY(0); }
+                        to { opacity: 0; transform: translateY(-10px); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+
+        // ==============================================
+        // CONFIGURACIÓN SMTP (se mantiene para futuro)
+        // ==============================================
+        function cargarConfiguracionSMTPForm() {
+            document.getElementById('smtpServer').value = smtpConfig.servidor;
+            document.getElementById('smtpPort').value = smtpConfig.puerto;
+            document.getElementById('smtpEmail').value = smtpConfig.email;
+            document.getElementById('smtpPassword').value = smtpConfig.password;
+            document.getElementById('smtpUseTLS').checked = smtpConfig.useTLS;
+            document.getElementById('smtpAuth').checked = smtpConfig.auth;
+        }
+
+        function guardarConfiguracionSMTP() {
+            smtpConfig = {
+                servidor: document.getElementById('smtpServer').value,
+                puerto: parseInt(document.getElementById('smtpPort').value) || 587,
+                email: document.getElementById('smtpEmail').value,
+                password: document.getElementById('smtpPassword').value,
+                useTLS: document.getElementById('smtpUseTLS').checked,
+                auth: document.getElementById('smtpAuth').checked
+            };
+            
+            localStorage.setItem('dif_smtp_config', JSON.stringify(smtpConfig));
+            mostrarNotificacion('✅ Configuración SMTP guardada', 'success');
+        }
+
+        function cargarConfiguracionSMTP() {
+            const guardada = localStorage.getItem('dif_smtp_config');
+            if (guardada) {
+                try {
+                    smtpConfig = JSON.parse(guardada);
+                } catch (e) {
+                    console.error('Error cargando configuración SMTP:', e);
+                }
+            }
+        }
+
+        function probarConfiguracionSMTP() {
+            mostrarNotificacion('🧪 Esta función requiere backend. Use "mailto:" por ahora.', 'warning');
+        }
+
+        // ==============================================
+        // ESTILOS ADICIONALES
+        // ==============================================
         const style = document.createElement('style');
         style.textContent = `
             .verde { color: #4CAF50 !important; }
@@ -3092,53 +2994,6 @@ if (!document.querySelector('style[data-animaciones]')) {
             }
         `;
         document.head.appendChild(style);
-
-        // ==============================================
-        // EJEMPLO DE FUNCIÓN PARA ENVÍO REAL (backend)
-        // ==============================================
-        /*
-        // Para implementar en tu backend (Node.js ejemplo):
-        async function enviarCorreoBackend(destinatario, asunto, mensaje) {
-            const response = await fetch('/api/enviar-correo', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    destinatario: destinatario,
-                    asunto: asunto,
-                    mensaje: mensaje,
-                    config: smtpConfig // En producción, esto debería manejarse en el backend
-                })
-            });
-            
-            return await response.json();
-        }
-        */
-
-        // ==============================================
-        // INSTRUCCIONES PARA IMPLEMENTACIÓN EN SHAREPOINT
-        // ==============================================
-        /*
-        1. Alojar esta aplicación en SharePoint:
-           - Crear una página web
-           - Insertar el código HTML/CSS/JS
-           - O usar SharePoint Framework (SPFx)
-        
-        2. Para envío real de correos en SharePoint:
-           Opción A: Usar Microsoft Graph API
-           Opción B: Usar Power Automate flujos
-           Opción C: Usar Azure Functions + Office 365 SMTP
-        
-        3. Configurar permisos:
-           - Solo administradores pueden acceder al botón de configuración
-           - Los usuarios finales solo ven el visor de expedientes
-        
-        4. Implementar backend seguro:
-           - No almacenar contraseñas SMTP en frontend
-           - Usar Azure Key Vault o SharePoint Listas seguras
-           - Implementar autenticación con Azure AD
-        */
     </script>
 </body>
 </html>

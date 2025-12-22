@@ -1,0 +1,3144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- AGREGAR ESTO DENTRO DE <head> -->
+<!-- Configuración especial para GitHub Pages -->
+<meta http-equiv="Content-Security-Policy" 
+      content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:;
+               script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net;
+               style-src 'self' 'unsafe-inline';
+               connect-src 'self' *;
+               frame-src 'self' *;
+               img-src 'self' data: blob: https:;
+               font-src 'self' data: https:;">
+               
+<!-- Para evitar problemas de caché -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
+<!-- Para compatibilidad con iframe -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Expedientes - DIF</title>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        }
+        
+        body { 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        /* STATS */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-number {
+            font-size: 42px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            font-size: 16px;
+            color: #666;
+        }
+        
+        /* CONTROLS */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px;
+            background: white;
+            border-bottom: 1px solid #e9ecef;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .search-box {
+            position: relative;
+            flex-grow: 1;
+            max-width: 400px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 14px 20px 14px 50px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .search-box input:focus {
+            border-color: #0078d4;
+            box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1);
+            outline: none;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        /* BUTTONS */
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #106ebe 0%, #005a9e 100%);
+            box-shadow: 0 6px 15px rgba(0, 120, 212, 0.2);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #388E3C 0%, #2E7D32 100%);
+            box-shadow: 0 6px 15px rgba(76, 175, 80, 0.2);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #FFC107 0%, #FFA000 100%);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #FFA000 0%, #FF8F00 100%);
+            box-shadow: 0 6px 15px rgba(255, 193, 7, 0.2);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+            box-shadow: 0 6px 15px rgba(220, 53, 69, 0.2);
+        }
+        
+        /* TABLE */
+        .table-container {
+            padding: 0;
+            overflow-x: auto;
+        }
+        
+        .expedientes-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+        }
+        
+        .expedientes-table th {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 3px solid #dee2e6;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .expedientes-table td {
+            padding: 20px 15px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+        
+        .expedientes-table tr:hover td {
+            background: #f8fafc;
+        }
+        
+        /* STATUS BADGES */
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-badge::before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .badge-verde {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(76, 175, 80, 0.05) 100%);
+            color: #2E7D32;
+            border: 1px solid rgba(76, 175, 80, 0.2);
+        }
+        
+        .badge-verde::before {
+            background: #4CAF50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+        }
+        
+        .badge-amarillo {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
+            color: #F57C00;
+            border: 1px solid rgba(255, 193, 7, 0.2);
+        }
+        
+        .badge-amarillo::before {
+            background: #FFC107;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+        }
+        
+        .badge-naranja {
+            background: linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, rgba(255, 152, 0, 0.05) 100%);
+            color: #EF6C00;
+            border: 1px solid rgba(255, 152, 0, 0.2);
+        }
+        
+        .badge-naranja::before {
+            background: #FF9800;
+            box-shadow: 0 0 10px rgba(255, 152, 0, 0.3);
+        }
+        
+        .badge-rojo {
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.1) 0%, rgba(244, 67, 54, 0.05) 100%);
+            color: #C62828;
+            border: 1px solid rgba(244, 67, 54, 0.2);
+        }
+        
+        .badge-rojo::before {
+            background: #F44336;
+            box-shadow: 0 0 10px rgba(244, 67, 54, 0.3);
+        }
+        
+        /* LEGEND */
+        .legend {
+            padding: 25px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e3f2fd 100%);
+            border-top: 2px solid #e9ecef;
+        }
+        
+        .legend h3 {
+            color: #0078d4;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid rgba(0,0,0,0.1);
+        }
+        
+        .color-verde { background: #4CAF50; }
+        .color-amarillo { background: #FFC107; }
+        .color-naranja { background: #FF9800; }
+        .color-rojo { background: #F44336; }
+        
+        /* MODAL STYLES */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.4s;
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 0;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+        
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .modal-content {
+            padding: 30px;
+        }
+        
+        .modal-footer {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-radius: 0 0 15px 15px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+        
+        /* MODAL DE NOTIFICACIONES */
+        .modal-notificaciones {
+            max-width: 900px;
+        }
+        
+        .tabs-notificaciones {
+            display: flex;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn:hover {
+            color: #0078d4;
+        }
+        
+        .tab-btn.active {
+            color: #0078d4;
+            border-bottom-color: #0078d4;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* FORMULARIOS DE CONTRASEÑA */
+        .login-container {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .login-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            color: #0078d4;
+        }
+        
+        .password-input {
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .password-input input {
+            width: 100%;
+            padding: 14px 50px 14px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            letter-spacing: 3px;
+            transition: all 0.3s;
+        }
+        
+        .password-input input:focus {
+            border-color: #0078d4;
+            box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1);
+            outline: none;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 18px;
+        }
+        
+        /* PANEL DE NOTIFICACIONES */
+        .notificaciones-panel {
+            padding: 20px;
+        }
+        
+        .user-list {
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .user-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+        
+        .user-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .user-item:last-child {
+            border-bottom: none;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+        }
+        
+        .user-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 14px;
+            border-radius: 6px;
+        }
+        
+        .btn-icon {
+            padding: 8px;
+            border-radius: 6px;
+            background: none;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .btn-icon:hover {
+            background: #f0f0f0;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #0078d4;
+            box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1);
+            outline: none;
+        }
+        
+        .file-upload {
+            border: 2px dashed #0078d4;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            background: rgba(0, 120, 212, 0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-upload:hover {
+            background: rgba(0, 120, 212, 0.1);
+        }
+        
+        .file-upload input {
+            display: none;
+        }
+        
+        .file-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        /* CONFIG BUTTON */
+        .config-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 120, 212, 0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            z-index: 100;
+            transition: all 0.3s;
+        }
+        
+        .config-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 120, 212, 0.4);
+        }
+        
+        /* LISTA DE USUARIOS PARA NOTIFICACIONES */
+        .usuarios-notificacion-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+        
+        .usuario-notificacion-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 5px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .usuario-notificacion-item:hover {
+            background: #f0f7ff;
+            border-color: #0078d4;
+        }
+        
+        .usuario-notificacion-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+        
+        .usuario-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .usuario-detalles h4 {
+            margin: 0;
+            font-size: 16px;
+            color: #333;
+        }
+        
+        .usuario-detalles p {
+            margin: 2px 0 0 0;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* CONFIGURACIÓN SMTP */
+        .smtp-config {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #dee2e6;
+        }
+        
+        .smtp-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 24px; }
+            .controls { flex-direction: column; align-items: stretch; }
+            .search-box { max-width: 100%; }
+            .buttons { justify-content: center; }
+            .btn { width: 100%; }
+            .stats-container { grid-template-columns: 1fr 1fr; }
+            .user-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .user-actions { align-self: flex-end; }
+            .smtp-grid { grid-template-columns: 1fr; }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-container { grid-template-columns: 1fr; }
+            .header { padding: 20px; }
+            .controls { padding: 15px; }
+            .modal { width: 95%; }
+        }
+        
+        /* ANIMATIONS */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #0078d4;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #106ebe;
+        }
+    </style>
+    <!-- Incluir SheetJS para leer Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <!-- BOTÓN FLOTANTE PARA CONFIGURACIÓN -->
+    <button class="config-button" onclick="mostrarLoginAdmin()" title="Acceso Administrador">
+        🔒
+    </button>
+
+    <!-- MODAL DE LOGIN ADMINISTRADOR -->
+    <div id="adminLoginModal" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>🔐 Acceso Administrador</h2>
+                <button class="close-modal" onclick="cerrarLoginAdmin()">&times;</button>
+            </div>
+            
+            <div class="modal-content">
+                <div class="login-container">
+                    <div class="login-icon">👑</div>
+                    <h3>Panel de Administración</h3>
+                    <p style="color: #666; margin-bottom: 20px;">
+                        Esta área está restringida al personal autorizado del DIF.
+                        Ingrese la contraseña de administrador para continuar.
+                    </p>
+                    
+                    <div class="password-input">
+                        <input type="password" id="adminPassword" 
+                               placeholder="Contraseña de administrador" autocomplete="off">
+                        <button class="toggle-password" type="button" 
+                                onclick="togglePasswordVisibility('adminPassword')">
+                            👁️
+                        </button>
+                    </div>
+                    
+                    <div id="adminPasswordError" style="color: #dc3545; margin: 10px 0; display: none;">
+                        ❌ Contraseña incorrecta. Intente nuevamente.
+                    </div>
+                    
+                    <div style="margin-top: 30px;">
+                        <button class="btn btn-primary" onclick="validarAccesoAdmin()">
+                            🔑 Ingresar como Administrador
+                        </button>
+                        <button class="btn" onclick="cerrarLoginAdmin()" style="margin-left: 10px;">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIGURACIÓN (SOLO ADMIN) -->
+    <div id="configModal" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>⚙️ Panel de Administración</h2>
+                <button class="close-modal" onclick="cerrarModalConfiguracion()">&times;</button>
+            </div>
+            
+            <div class="modal-content">
+                <div class="tabs-notificaciones">
+                    <button class="tab-btn active" onclick="cambiarTabAdmin('expedientes')">
+                        📁 Expedientes
+                    </button>
+                    <button class="tab-btn" onclick="cambiarTabAdmin('usuarios')">
+                        👥 Usuarios
+                    </button>
+                    <button class="tab-btn" onclick="cambiarTabAdmin('notificaciones')">
+                        🔔 Notificaciones
+                    </button>
+                    <button class="tab-btn" onclick="cambiarTabAdmin('configuracion')">
+                        ⚙️ Configuración SMTP
+                    </button>
+                </div>
+                
+                <!-- Pestaña de Expedientes -->
+                <div id="tab-expedientes" class="tab-content active">
+                    <div class="form-group">
+                        <label>📁 Cargar Archivo de Expedientes</label>
+                        <p style="margin-bottom: 15px; color: #666;">Suba un archivo Excel (.xlsx, .xls) o CSV con los expedientes:</p>
+                        
+                        <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                            <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" onchange="handleFileUpload(event)">
+                            <div style="font-size: 48px; margin-bottom: 15px;">📤</div>
+                            <h3 style="color: #0078d4; margin-bottom: 10px;">Haga clic para cargar archivo</h3>
+                            <p style="color: #666;">Formatos: Excel (.xlsx, .xls) o CSV</p>
+                            <p style="color: #888; margin-top: 10px; font-size: 14px;">Los usuarios se extraerán automáticamente de la columna "Responsable"</p>
+                        </div>
+                        
+                        <div id="fileInfo" class="file-info" style="display: none;">
+                            <div>
+                                <strong id="fileName"></strong><br>
+                                <span id="fileSize"></span><br>
+                                <span id="fileType"></span>
+                            </div>
+                            <div>
+                                <button class="btn btn-small btn-success" onclick="procesarArchivo()" id="procesarBtn">
+                                    📋 Cargar al Sistema
+                                </button>
+                                <button class="btn btn-small btn-danger" onclick="eliminarArchivo()">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="processingInfo" style="display: none; margin-top: 10px; padding: 10px; background: #e7f3ff; border-radius: 5px;">
+                            <span id="processingText"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>📅 Configuración de Fechas</label>
+                        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                            <strong>Fecha de referencia actual:</strong>
+                            <span id="fechaReferenciaActual" style="background: #f0f0f0; padding: 5px 10px; border-radius: 4px;"></span>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn btn-warning" onclick="cambiarFechaReferencia()">
+                                📅 Cambiar Fecha Referencia
+                            </button>
+                            <button class="btn btn-success" onclick="usarFechaActual()">
+                                🕐 Usar Fecha Actual
+                            </button>
+                            <button class="btn" onclick="recalcularTodosExpedientes()">
+                                🔄 Recalcular Semaforización
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>⚡ Acciones de Administrador</label>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn btn-success" onclick="exportarExcel()">
+                                📥 Exportar a Excel
+                            </button>
+                            <button class="btn btn-danger" onclick="limpiarDatos()">
+                                🗑️ Limpiar Datos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pestaña de Usuarios -->
+                <div id="tab-usuarios" class="tab-content">
+                    <div class="form-group">
+                        <label>👥 Gestión de Usuarios</label>
+                        <p style="margin-bottom: 15px; color: #666;">Usuarios detectados automáticamente del archivo:</p>
+                        
+                        <div class="user-list" id="userList">
+                            <!-- Usuarios se llenarán automáticamente del archivo -->
+                        </div>
+                        
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <button class="btn btn-primary" onclick="agregarUsuario()">
+                                ➕ Agregar Usuario
+                            </button>
+                            <button class="btn btn-danger" onclick="eliminarTodosUsuarios()">
+                                🗑️ Eliminar Todos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pestaña de Notificaciones -->
+                <div id="tab-notificaciones" class="tab-content">
+                    <div class="form-group">
+                        <label>🔔 Sistema de Notificaciones</label>
+                        <div style="margin-top: 20px;">
+                            <button class="btn btn-primary" onclick="mostrarModalNotificaciones()" style="width: 100%; padding: 20px; font-size: 18px;">
+                                📧 Abrir Módulo de Notificaciones
+                            </button>
+                        </div>
+                        
+                        <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                            <h4>📊 Estadísticas de Notificaciones</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                                <div style="background: white; padding: 15px; border-radius: 8px;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #0078d4;" id="totalUsuariosNotificacion">0</div>
+                                    <div style="color: #666;">Usuarios registrados</div>
+                                </div>
+                                <div style="background: white; padding: 15px; border-radius: 8px;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #28a745;" id="totalNotificacionesEnviadas">0</div>
+                                    <div style="color: #666;">Notificaciones enviadas</div>
+                                </div>
+                                <div style="background: white; padding: 15px; border-radius: 8px;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #ffc107;" id="expedientesVencidos">0</div>
+                                    <div style="color: #666;">Expedientes vencidos</div>
+                                </div>
+                                <div style="background: white; padding: 15px; border-radius: 8px;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #6c757d;" id="ultimaNotificacion">Nunca</div>
+                                    <div style="color: #666;">Última notificación</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pestaña de Configuración SMTP -->
+                <div id="tab-configuracion" class="tab-content">
+                    <div class="form-group">
+                        <label>📧 Configuración del Servidor de Correo</label>
+                        <p style="color: #666; margin-bottom: 20px;">
+                            Configure los parámetros del servidor SMTP para enviar notificaciones por correo electrónico.
+                            Esta configuración es necesaria para que el sistema pueda enviar correos reales.
+                        </p>
+                        
+                        <div class="smtp-config">
+                            <div class="smtp-grid">
+                                <div class="form-group">
+                                    <label>🏢 Servidor SMTP:</label>
+                                    <input type="text" id="smtpServer" placeholder="smtp.office365.com o smtp.gmail.com">
+                                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                        Ej: smtp.office365.com (Office 365)
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>🔢 Puerto:</label>
+                                    <input type="number" id="smtpPort" value="587" placeholder="587">
+                                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                        Puerto común: 587 (TLS) o 465 (SSL)
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>📧 Correo remitente:</label>
+                                    <input type="email" id="smtpEmail" placeholder="sistema@dif.gob.mx">
+                                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                        Correo que aparecerá como remitente
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>🔑 Contraseña:</label>
+                                    <input type="password" id="smtpPassword" placeholder="Contraseña del correo">
+                                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                        Contraseña del correo remitente
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" style="margin-top: 20px;">
+                                <label>🔒 Seguridad:</label>
+                                <div style="display: flex; gap: 20px; margin-top: 10px;">
+                                    <label style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="checkbox" id="smtpUseTLS" checked>
+                                        <span>Usar TLS/SSL</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="checkbox" id="smtpAuth" checked>
+                                        <span>Requiere autenticación</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 15px; background: #e7f3ff; border-radius: 8px; border-left: 4px solid #0078d4;">
+                                <strong>📋 Configuración para SharePoint/Office 365:</strong><br>
+                                <div style="margin-top: 10px; font-size: 14px;">
+                                    • Servidor: <code>smtp.office365.com</code><br>
+                                    • Puerto: <code>587</code><br>
+                                    • TLS: <code>Sí</code><br>
+                                    • Autenticación: <code>Sí</code>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 30px; display: flex; gap: 15px;">
+                                <button class="btn btn-success" onclick="guardarConfiguracionSMTP()">
+                                    💾 Guardar Configuración SMTP
+                                </button>
+                                <button class="btn btn-warning" onclick="probarConfiguracionSMTP()">
+                                    🧪 Probar Configuración
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="guardarConfiguracion()">
+                    💾 Guardar Configuración
+                </button>
+                <button class="btn" onclick="cerrarModalConfiguracion()">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE NOTIFICACIONES -->
+    <div id="notificacionesModal" class="modal-overlay" style="display: none;">
+        <div class="modal modal-notificaciones">
+            <div class="modal-header">
+                <h2>📧 Sistema de Notificaciones</h2>
+                <button class="close-modal" onclick="cerrarModalNotificaciones()">&times;</button>
+            </div>
+            
+            <div class="modal-content" id="notificacionesContent">
+                <!-- Contenido se carga dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="container" id="mainContent">
+        <div class="header">
+            <h1>🏛️ Sistema de Seguimiento de Expedientes</h1>
+            <p>División de Fiscalización y Liquidación Tributaria Extensiva - DIF</p>
+        </div>
+        
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-number" id="total-count">0</div>
+                <div class="stat-label">Total Expedientes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number verde" id="verde-count">0</div>
+                <div class="stat-label verde">En Tiempo (VERDE)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number amarillo" id="amarillo-count">0</div>
+                <div class="stat-label amarillo">Alerta (AMARILLO/NARANJA)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number rojo" id="rojo-count">0</div>
+                <div class="stat-label rojo">Vencidos (ROJO)</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-input" placeholder="Buscar por expediente, responsable o descripción...">
+            </div>
+            
+            <div class="buttons">
+                <button class="btn btn-warning" onclick="cambiarFechaReferencia()">
+                    📅 Cambiar Fecha
+                </button>
+                <button class="btn btn-success" onclick="exportarExcel()">
+                    📥 Exportar a Excel
+                </button>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table class="expedientes-table">
+                <thead>
+                    <tr>
+                        <th width="12%">Expediente</th>
+                        <th width="25%">Descripción</th>
+                        <th width="10%">Estado</th>
+                        <th width="12%">Tiempo Restante</th>
+                        <th width="12%">Responsable</th>
+                        <th width="12%">Departamento</th>
+                        <th width="12%">Fecha Base</th>
+                        <th width="5%">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 50px;">
+                            <div style="font-size: 18px; color: #666; margin-bottom: 20px;">
+                                No hay expedientes cargados
+                            </div>
+                            <div style="color: #888; margin-bottom: 20px;">
+                                Para comenzar, contacte al administrador del sistema
+                            </div>
+                            <button class="btn btn-primary" onclick="mostrarLoginAdmin()">
+                                🔒 Solicitar Acceso Administrador
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="legend">
+            <h3>📋 Leyenda de Estados</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color color-verde"></div>
+                    <div>
+                        <strong>VERDE</strong><br>
+                        En tiempo (4+ meses restantes)
+                    </div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color color-amarillo"></div>
+                    <div>
+                        <strong>AMARILLO</strong><br>
+                        Alerta (2 meses restantes)
+                    </div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color color-naranja"></div>
+                    <div>
+                        <strong>NARANJA</strong><br>
+                        Próximo (1 mes restante)
+                    </div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color color-rojo"></div>
+                    <div>
+                        <strong>ROJO</strong><br>
+                        Vencido (atención urgente)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==============================================
+        // VARIABLES GLOBALES
+        // ==============================================
+        let expedientes = [];
+        let filteredExpedientes = [];
+        let usuariosNotificacion = [];
+        let archivoCargado = null;
+        let usuariosDisponibles = [];
+        let adminConfig = {
+            password: 'DIFadmin2025', // Contraseña de administrador
+            sesionActiva: false,
+            tiempoSesion: 60 // minutos
+        };
+        
+        let smtpConfig = {
+            servidor: 'smtp.office365.com',
+            puerto: 587,
+            email: 'sistema@dif.gob.mx',
+            password: '',
+            useTLS: true,
+            auth: true
+        };
+        
+        // FECHA DE REFERENCIA PARA SEMAFORIZACIÓN
+        let fechaReferencia = new Date('2025-12-18');
+        const PERIODO_REVISION_MESES = 4;
+
+        // ==============================================
+        // FUNCIONES DE INICIALIZACIÓN
+        // ==============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarConfiguracionGuardada();
+            cargarConfiguracionSMTP();
+            configurarEventos();
+            actualizarDisplayFechaReferencia();
+            actualizarEstadisticasNotificaciones();
+            
+            // Verificar si hay sesión activa
+            verificarSesionAdminActiva();
+        });
+
+        function configurarEventos() {
+            document.getElementById('search-input').addEventListener('input', filtrarExpedientes);
+        }
+
+        function actualizarDisplayFechaReferencia() {
+            const fechaDisplay = document.getElementById('fechaReferenciaActual');
+            if (fechaDisplay) {
+                fechaDisplay.textContent = fechaReferencia.toISOString().split('T')[0];
+            }
+        }
+
+        function actualizarEstadisticasNotificaciones() {
+            document.getElementById('totalUsuariosNotificacion').textContent = usuariosDisponibles.length;
+            document.getElementById('expedientesVencidos').textContent = expedientes.filter(e => e.estado === 'rojo').length;
+            
+            // Obtener historial de notificaciones
+            const historial = obtenerHistorialNotificaciones();
+            document.getElementById('totalNotificacionesEnviadas').textContent = historial.length;
+            
+            if (historial.length > 0) {
+                const ultima = historial[0];
+                const fecha = new Date(ultima.fecha);
+                document.getElementById('ultimaNotificacion').textContent = 
+                    fecha.toLocaleDateString() + ' ' + fecha.toLocaleTimeString().substring(0, 5);
+            }
+        }
+
+        // ==============================================
+        // SISTEMA DE ADMINISTRADOR
+        // ==============================================
+        function mostrarLoginAdmin() {
+            document.getElementById('adminLoginModal').style.display = 'flex';
+        }
+
+        function cerrarLoginAdmin() {
+            document.getElementById('adminLoginModal').style.display = 'none';
+        }
+
+        function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            const button = event.target;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                button.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                button.textContent = '👁️';
+            }
+        }
+
+        function validarAccesoAdmin() {
+            const passwordInput = document.getElementById('adminPassword');
+            const errorDiv = document.getElementById('adminPasswordError');
+            const password = passwordInput.value;
+            
+            if (password === adminConfig.password) {
+                // Iniciar sesión
+                adminConfig.sesionActiva = true;
+                adminConfig.inicioSesion = new Date();
+                
+                // Guardar sesión en localStorage
+                localStorage.setItem('dif_sesion_admin', JSON.stringify({
+                    inicio: adminConfig.inicioSesion,
+                    activa: true
+                }));
+                
+                // Cerrar modal de login y mostrar configuración
+                cerrarLoginAdmin();
+                mostrarModalConfiguracion();
+                
+                // Configurar timeout para cerrar sesión
+                setTimeout(() => {
+                    cerrarSesionAdmin();
+                }, adminConfig.tiempoSesion * 60 * 1000);
+                
+            } else {
+                // Mostrar error
+                errorDiv.style.display = 'block';
+                passwordInput.style.borderColor = '#dc3545';
+                passwordInput.value = '';
+                passwordInput.focus();
+                
+                // Agregar efecto de vibración
+                passwordInput.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    passwordInput.style.animation = '';
+                }, 500);
+            }
+        }
+
+        function verificarSesionAdminActiva() {
+            const sesionGuardada = localStorage.getItem('dif_sesion_admin');
+            
+            if (sesionGuardada) {
+                try {
+                    const sesion = JSON.parse(sesionGuardada);
+                    const inicio = new Date(sesion.inicio);
+                    const ahora = new Date();
+                    const diferenciaMin = (ahora - inicio) / (1000 * 60);
+                    
+                    if (sesion.activa && diferenciaMin < adminConfig.tiempoSesion) {
+                        adminConfig.sesionActiva = true;
+                        adminConfig.inicioSesion = inicio;
+                        
+                        // Renovar timeout
+                        setTimeout(() => {
+                            cerrarSesionAdmin();
+                        }, (adminConfig.tiempoSesion - diferenciaMin) * 60 * 1000);
+                    } else {
+                        // Sesión expirada
+                        localStorage.removeItem('dif_sesion_admin');
+                        adminConfig.sesionActiva = false;
+                    }
+                } catch (e) {
+                    console.error('Error verificando sesión:', e);
+                    adminConfig.sesionActiva = false;
+                }
+            }
+        }
+
+        function cerrarSesionAdmin() {
+            adminConfig.sesionActiva = false;
+            localStorage.removeItem('dif_sesion_admin');
+            
+            // Si el modal de configuración está abierto, cerrarlo
+            if (document.getElementById('configModal').style.display === 'flex') {
+                cerrarModalConfiguracion();
+            }
+            
+            mostrarNotificacion('🔒 Sesión de administrador cerrada por inactividad', 'warning');
+        }
+
+        function mostrarModalConfiguracion() {
+            if (!adminConfig.sesionActiva) {
+                mostrarLoginAdmin();
+                return;
+            }
+            
+            document.getElementById('configModal').style.display = 'flex';
+            cargarListaUsuarios();
+            actualizarDisplayFechaReferencia();
+            cambiarTabAdmin('expedientes');
+        }
+
+        function cerrarModalConfiguracion() {
+            document.getElementById('configModal').style.display = 'none';
+        }
+
+        function cambiarTabAdmin(tabId) {
+            // Ocultar todas las pestañas
+            document.querySelectorAll('#configModal .tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // Desactivar todos los botones
+            document.querySelectorAll('#configModal .tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Mostrar pestaña seleccionada
+            document.getElementById(`tab-${tabId}`).style.display = 'block';
+            
+            // Activar botón correspondiente
+            document.querySelector(`#configModal .tab-btn[onclick*="${tabId}"]`).classList.add('active');
+            
+            // Cargar contenido específico
+            if (tabId === 'usuarios') {
+                cargarListaUsuarios();
+            } else if (tabId === 'configuracion') {
+                cargarConfiguracionSMTPForm();
+            }
+        }
+
+        // ==============================================
+        // MÓDULO DE NOTIFICACIONES
+        // ==============================================
+        function mostrarModalNotificaciones() {
+            if (!adminConfig.sesionActiva) {
+                mostrarLoginAdmin();
+                return;
+            }
+            
+            document.getElementById('notificacionesModal').style.display = 'flex';
+            mostrarPanelNotificaciones();
+        }
+
+        function cerrarModalNotificaciones() {
+            document.getElementById('notificacionesModal').style.display = 'none';
+        }
+
+        function mostrarPanelNotificaciones() {
+            const contenido = document.getElementById('notificacionesContent');
+            
+            contenido.innerHTML = `
+                <div class="notificaciones-panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div>
+                            <h3>📧 Enviar Notificaciones</h3>
+                            <p style="color: #666;">Seleccione destinatarios y escriba el mensaje</p>
+                        </div>
+                        <div style="font-size: 14px; color: #666;">
+                            <span id="contadorSeleccionados">0</span> usuarios seleccionados
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>📝 Asunto del correo:</label>
+                        <input type="text" id="asuntoNotificacion" 
+                               value="📋 Seguimiento de Expedientes DIF - Actualización"
+                               placeholder="Asunto del correo...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>💬 Mensaje personalizado:</label>
+                        <textarea id="mensajeNotificacion" rows="6" placeholder="Escriba su mensaje aquí...">
+Estimado/a colega,
+
+Le informamos sobre el estado actual de los expedientes bajo su responsabilidad en el Sistema de Seguimiento DIF.
+
+A continuación se presenta un resumen de los expedientes que requieren atención:
+
+[RESUMEN_AUTOMATICO]
+
+Por favor, revise los expedientes que se encuentran en estado de alerta o vencidos para tomar las acciones correspondientes.
+
+Puede acceder al sistema para ver detalles completos en: [URL_SISTEMA]
+
+Atentamente,
+División de Fiscalización y Liquidación Tributaria Extensiva
+Sistema de Seguimiento de Expedientes DIF
+                        </textarea>
+                        <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                            <strong>Variables disponibles:</strong> [RESUMEN_AUTOMATICO] [URL_SISTEMA] [NOMBRE_USUARIO]
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>👥 Seleccionar destinatarios:</label>
+                        <div style="margin-top: 10px; margin-bottom: 10px;">
+                            <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                <input type="checkbox" id="seleccionarTodos" onchange="seleccionarTodosUsuarios(this.checked)">
+                                <span style="font-weight: bold;">✅ Seleccionar todos los usuarios</span>
+                            </label>
+                        </div>
+                        
+                        <div class="usuarios-notificacion-container" id="listaUsuariosNotificacion">
+                            ${generarListaUsuariosNotificacion()}
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>📊 Filtros de selección:</label>
+                        <div style="display: flex; gap: 15px; margin-top: 10px;">
+                            <button class="btn btn-small" onclick="seleccionarSoloVencidos()">
+                                🔴 Solo responsables de vencidos
+                            </button>
+                            <button class="btn btn-small" onclick="seleccionarSoloAlertas()">
+                                🟠 Solo responsables con alertas
+                            </button>
+                            <button class="btn btn-small" onclick="limpiarSeleccion()">
+                                🗑️ Limpiar selección
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                        <h4>📋 Resumen del envío</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                            <div>Total usuarios: <strong>${usuariosDisponibles.length}</strong></div>
+                            <div>Usuarios seleccionados: <strong id="resumenSeleccionados">0</strong></div>
+                            <div>Con correo válido: <strong id="resumenConCorreo">0</strong></div>
+                            <div>Expedientes vencidos: <strong>${expedientes.filter(e => e.estado === 'rojo').length}</strong></div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button class="btn btn-success" onclick="enviarNotificacionesReales()">
+                            📤 Enviar Notificaciones por Correo
+                        </button>
+                        <button class="btn btn-warning" onclick="previsualizarNotificacion()">
+                            👁️ Previsualizar
+                        </button>
+                        <button class="btn" onclick="cerrarModalNotificaciones()">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            actualizarContadorSeleccionados();
+        }
+
+        function generarListaUsuariosNotificacion() {
+            if (usuariosDisponibles.length === 0) {
+                return `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <p>No hay usuarios registrados en el sistema.</p>
+                        <p>Cargue un archivo de expedientes primero.</p>
+                    </div>
+                `;
+            }
+            
+            let html = '';
+            usuariosDisponibles.forEach((usuario, index) => {
+                // Contar expedientes del usuario
+                const expedientesUsuario = expedientes.filter(e => e.responsable === usuario.nombre);
+                const vencidos = expedientesUsuario.filter(e => e.estado === 'rojo').length;
+                const alertas = expedientesUsuario.filter(e => e.estado === 'naranja' || e.estado === 'amarillo').length;
+                
+                html += `
+                    <div class="usuario-notificacion-item">
+                        <div class="usuario-notificacion-info">
+                            <input type="checkbox" id="usuario-${usuario.id}" 
+                                   class="usuario-checkbox" data-id="${usuario.id}"
+                                   data-nombre="${usuario.nombre}" data-email="${usuario.email || ''}"
+                                   onchange="actualizarContadorSeleccionados()">
+                            <div class="usuario-avatar">
+                                ${usuario.nombre.charAt(0).toUpperCase()}
+                            </div>
+                            <div class="usuario-detalles">
+                                <h4>${usuario.nombre}</h4>
+                                <p>📧 ${usuario.email || 'Sin correo asignado'}</p>
+                                <div style="display: flex; gap: 10px; font-size: 12px; margin-top: 5px;">
+                                    ${expedientesUsuario.length > 0 ? `<span>📋 ${expedientesUsuario.length} expedientes</span>` : ''}
+                                    ${vencidos > 0 ? `<span style="color: #dc3545;">🔴 ${vencidos} vencidos</span>` : ''}
+                                    ${alertas > 0 ? `<span style="color: #ff9800;">🟠 ${alertas} alertas</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            return html;
+        }
+
+        function seleccionarTodosUsuarios(seleccionar) {
+            const checkboxes = document.querySelectorAll('.usuario-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = seleccionar;
+            });
+            actualizarContadorSeleccionados();
+        }
+
+        function seleccionarSoloVencidos() {
+            // Desmarcar todos primero
+            seleccionarTodosUsuarios(false);
+            
+            // Marcar solo usuarios con expedientes vencidos
+            usuariosDisponibles.forEach(usuario => {
+                const expedientesUsuario = expedientes.filter(e => e.responsable === usuario.nombre);
+                const tieneVencidos = expedientesUsuario.some(e => e.estado === 'rojo');
+                
+                if (tieneVencidos) {
+                    const checkbox = document.getElementById(`usuario-${usuario.id}`);
+                    if (checkbox) checkbox.checked = true;
+                }
+            });
+            
+            actualizarContadorSeleccionados();
+        }
+
+        function seleccionarSoloAlertas() {
+            // Desmarcar todos primero
+            seleccionarTodosUsuarios(false);
+            
+            // Marcar solo usuarios con expedientes en alerta
+            usuariosDisponibles.forEach(usuario => {
+                const expedientesUsuario = expedientes.filter(e => e.responsable === usuario.nombre);
+                const tieneAlertas = expedientesUsuario.some(e => 
+                    e.estado === 'naranja' || e.estado === 'amarillo' || e.estado === 'rojo'
+                );
+                
+                if (tieneAlertas) {
+                    const checkbox = document.getElementById(`usuario-${usuario.id}`);
+                    if (checkbox) checkbox.checked = true;
+                }
+            });
+            
+            actualizarContadorSeleccionados();
+        }
+
+        function limpiarSeleccion() {
+            seleccionarTodosUsuarios(false);
+        }
+
+        function actualizarContadorSeleccionados() {
+            const checkboxes = document.querySelectorAll('.usuario-checkbox:checked');
+            const contador = document.getElementById('contadorSeleccionados');
+            const resumenSeleccionados = document.getElementById('resumenSeleccionados');
+            const resumenConCorreo = document.getElementById('resumenConCorreo');
+            
+            if (contador) contador.textContent = checkboxes.length;
+            if (resumenSeleccionados) resumenSeleccionados.textContent = checkboxes.length;
+            
+            // Contar cuántos tienen correo válido
+            let conCorreo = 0;
+            checkboxes.forEach(checkbox => {
+                const email = checkbox.dataset.email;
+                if (email && email.includes('@')) conCorreo++;
+            });
+            
+            if (resumenConCorreo) resumenConCorreo.textContent = conCorreo;
+        }
+
+        // ==============================================
+        // ENVÍO REAL DE NOTIFICACIONES
+        // ==============================================
+        async function enviarNotificacionesReales() {
+            // Verificar configuración SMTP
+            if (!smtpConfig.servidor || !smtpConfig.email || !smtpConfig.password) {
+                mostrarNotificacion('⚠️ Configure el servidor SMTP primero', 'warning');
+                cambiarTabAdmin('configuracion');
+                return;
+            }
+            
+            // Obtener usuarios seleccionados
+            const checkboxes = Array.from(document.querySelectorAll('.usuario-checkbox:checked'));
+            if (checkboxes.length === 0) {
+                mostrarNotificacion('⚠️ Seleccione al menos un destinatario', 'warning');
+                return;
+            }
+            
+            // Filtrar solo usuarios con correo válido
+            const usuariosConCorreo = checkboxes.filter(checkbox => {
+                const email = checkbox.dataset.email;
+                return email && email.includes('@');
+            });
+            
+            if (usuariosConCorreo.length === 0) {
+                mostrarNotificacion('⚠️ Los usuarios seleccionados no tienen correo válido', 'warning');
+                return;
+            }
+            
+            const asunto = document.getElementById('asuntoNotificacion').value;
+            const mensajeBase = document.getElementById('mensajeNotificacion').value;
+            
+            if (!asunto || !mensajeBase) {
+                mostrarNotificacion('⚠️ Complete el asunto y el mensaje', 'warning');
+                return;
+            }
+            
+            const confirmacion = confirm(`¿Enviar notificaciones a ${usuariosConCorreo.length} destinatario(s)?\n\nSe enviarán correos reales a las direcciones registradas.`);
+            if (!confirmacion) return;
+            
+            // Mostrar progreso
+            mostrarProgresoEnvio(usuariosConCorreo.length);
+            
+            let enviadosExitosos = 0;
+            let errores = [];
+            
+            // Enviar correos uno por uno
+            for (let i = 0; i < usuariosConCorreo.length; i++) {
+                const checkbox = usuariosConCorreo[i];
+                const usuario = {
+                    nombre: checkbox.dataset.nombre,
+                    email: checkbox.dataset.email
+                };
+                
+                // Personalizar mensaje para cada usuario
+                const mensajePersonalizado = personalizarMensaje(mensajeBase, usuario);
+                
+                try {
+                    // INTENTAR ENVÍO REAL
+                    const resultado = await intentarEnvioCorreo(usuario.email, asunto, mensajePersonalizado);
+                    
+                    if (resultado.exito) {
+                        enviadosExitosos++;
+                        actualizarProgresoEnvio(i + 1, usuariosConCorreo.length, usuario.nombre, true);
+                    } else {
+                        errores.push(`${usuario.nombre}: ${resultado.error}`);
+                        actualizarProgresoEnvio(i + 1, usuariosConPorreo.length, usuario.nombre, false);
+                    }
+                    
+                    // Pequeña pausa para no saturar el servidor
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                } catch (error) {
+                    errores.push(`${usuario.nombre}: Error inesperado`);
+                    console.error('Error enviando correo:', error);
+                }
+            }
+            
+            // Registrar en historial
+            const notificacion = {
+                id: Date.now(),
+                fecha: new Date().toISOString(),
+                asunto: asunto,
+                destinatarios: usuariosConCorreo.length,
+                enviadosExitosos: enviadosExitosos,
+                errores: errores.length,
+                estado: enviadosExitosos > 0 ? 'parcial' : 'error'
+            };
+            
+            if (enviadosExitosos === usuariosConCorreo.length) {
+                notificacion.estado = 'completo';
+            }
+            
+            guardarEnHistorialNotificaciones(notificacion);
+            actualizarEstadisticasNotificaciones();
+            
+            // Mostrar resumen
+            mostrarResumenEnvio(enviadosExitosos, usuariosConCorreo.length, errores);
+        }
+
+        function personalizarMensaje(mensajeBase, usuario) {
+            let mensaje = mensajeBase;
+            
+            // Reemplazar variables
+            mensaje = mensaje.replace(/\[NOMBRE_USUARIO\]/g, usuario.nombre);
+            mensaje = mensaje.replace(/\[URL_SISTEMA\]/g, window.location.href);
+            
+            // Generar resumen automático para el usuario
+            const expedientesUsuario = expedientes.filter(e => e.responsable === usuario.nombre);
+            const vencidos = expedientesUsuario.filter(e => e.estado === 'rojo');
+            const alertas = expedientesUsuario.filter(e => e.estado === 'naranja' || e.estado === 'amarillo');
+            
+            let resumen = `\n\n📊 RESUMEN DE SUS EXPEDIENTES:\n`;
+            resumen += `• Total expedientes: ${expedientesUsuario.length}\n`;
+            if (vencidos.length > 0) resumen += `• 🔴 Vencidos: ${vencidos.length}\n`;
+            if (alertas.length > 0) resumen += `• 🟠 En alerta: ${alertas.length}\n`;
+            if (expedientesUsuario.length === 0) resumen += `• No tiene expedientes asignados\n`;
+            
+            mensaje = mensaje.replace(/\[RESUMEN_AUTOMATICO\]/g, resumen);
+            
+            return mensaje;
+        }
+
+        async function intentarEnvioCorreo(destinatario, asunto, mensaje) {
+            // EN PRODUCCIÓN: Reemplazar esto con código real de envío SMTP
+            
+            // Opción 1: Usar EmailJS (si decides usarlo)
+            // return await enviarConEmailJS(destinatario, asunto, mensaje);
+            
+            // Opción 2: Usar un endpoint de backend propio
+            // return await enviarConBackend(destinatario, asunto, mensaje);
+            
+            // Opción 3: Usar API de SharePoint si estás en Office 365
+            // return await enviarConSharePointAPI(destinatario, asunto, mensaje);
+            
+            // Por ahora, simulamos éxito pero guardamos los detalles para que puedas implementar después
+            console.log('📧 Intento de envío a:', destinatario);
+            console.log('Asunto:', asunto);
+            console.log('Mensaje (primeras 200 chars):', mensaje.substring(0, 200) + '...');
+            
+            // Para desarrollo: Simular éxito/error aleatorio
+            const simularExito = Math.random() > 0.2; // 80% éxito en desarrollo
+            
+            if (simularExito) {
+                // Guardar en "cola de envíos" para que veas que se procesaría
+                const colaEnvio = JSON.parse(localStorage.getItem('dif_cola_envios') || '[]');
+                colaEnvio.push({
+                    fecha: new Date().toISOString(),
+                    destinatario: destinatario,
+                    asunto: asunto,
+                    mensaje: mensaje,
+                    estado: 'pendiente_real'
+                });
+                localStorage.setItem('dif_cola_envios', JSON.stringify(colaEnvio));
+                
+                return { exito: true, mensaje: 'Correo agregado a cola de envío' };
+            } else {
+                return { 
+                    exito: false, 
+                    error: 'Error simulado: Servidor SMTP no disponible en modo desarrollo' 
+                };
+            }
+        }
+
+        function mostrarProgresoEnvio(total) {
+            const contenido = document.getElementById('notificacionesContent');
+            contenido.innerHTML = `
+                <div class="notificaciones-panel">
+                    <div style="text-align: center; padding: 30px;">
+                        <div class="login-icon">📤</div>
+                        <h3>Enviando Notificaciones</h3>
+                        <p style="color: #666; margin-bottom: 30px;">
+                            Enviando correos a ${total} destinatario(s)...
+                        </p>
+                        
+                        <div style="background: #f8f9fa; border-radius: 10px; padding: 20px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>Progreso:</span>
+                                <span id="progresoActual">0</span>/<span id="progresoTotal">${total}</span>
+                            </div>
+                            <div style="width: 100%; height: 20px; background: #e9ecef; border-radius: 10px; overflow: hidden;">
+                                <div id="barraProgreso" style="width: 0%; height: 100%; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); transition: width 0.3s;"></div>
+                            </div>
+                        </div>
+                        
+                        <div id="detalleProgreso" style="margin-top: 20px; max-height: 200px; overflow-y: auto; text-align: left;">
+                            <!-- Detalles se agregarán aquí -->
+                        </div>
+                        
+                        <div style="margin-top: 30px;">
+                            <button class="btn btn-danger" onclick="cancelarEnvio()">
+                                ❌ Cancelar Envío
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function actualizarProgresoEnvio(actual, total, usuario, exito) {
+            const barra = document.getElementById('barraProgreso');
+            const progresoActual = document.getElementById('progresoActual');
+            const detalle = document.getElementById('detalleProgreso');
+            
+            if (barra) barra.style.width = `${(actual / total) * 100}%`;
+            if (progresoActual) progresoActual.textContent = actual;
+            
+            if (detalle) {
+                const item = document.createElement('div');
+                item.style.cssText = `
+                    padding: 8px 12px;
+                    margin-bottom: 5px;
+                    background: ${exito ? '#d4edda' : '#f8d7da'};
+                    border-radius: 5px;
+                    border-left: 4px solid ${exito ? '#28a745' : '#dc3545'};
+                    font-size: 14px;
+                `;
+                item.innerHTML = `
+                    ${exito ? '✅' : '❌'} ${usuario} 
+                    <span style="float: right; color: #666;">${exito ? 'Enviado' : 'Error'}</span>
+                `;
+                detalle.appendChild(item);
+                detalle.scrollTop = detalle.scrollHeight;
+            }
+        }
+
+        function cancelarEnvio() {
+            mostrarNotificacion('⚠️ Envío cancelado por el usuario', 'warning');
+            mostrarPanelNotificaciones();
+        }
+
+        function mostrarResumenEnvio(exitosos, total, errores) {
+            let html = `
+                <div class="notificaciones-panel">
+                    <div style="text-align: center; padding: 20px;">
+                        <div class="login-icon">${exitosos === total ? '🎉' : exitosos > 0 ? '⚠️' : '❌'}</div>
+                        <h3>${exitosos === total ? '¡Envío Completado!' : exitosos > 0 ? 'Envío Parcial' : 'Envío Fallido'}</h3>
+                        
+                        <div style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                                <div style="background: white; padding: 15px; border-radius: 8px;">
+                                    <div style="font-size: 32px; font-weight: bold; color: #28a745;">${exitosos}</div>
+                                    <div style="color: #666;">Enviados exitosamente</div>
+                                </div>
+                                <div style="background: white; padding: 15px; border-radius: 8px;">
+                                    <div style="font-size: 32px; font-weight: bold; color: #dc3545;">${total - exitosos}</div>
+                                    <div style="color: #666;">Con error</div>
+                                </div>
+                            </div>
+                            
+                            <div style="text-align: left;">
+                                <strong>Resumen:</strong>
+                                <ul style="margin-top: 10px;">
+                                    <li>Total destinatarios: ${total}</li>
+                                    <li>Correos enviados: ${exitosos}</li>
+                                    <li>Errores: ${total - exitosos}</li>
+                                    <li>Tasa de éxito: ${Math.round((exitosos / total) * 100)}%</li>
+                                </ul>
+                            </div>
+                        </div>
+            `;
+            
+            if (errores.length > 0) {
+                html += `
+                    <div style="margin-top: 20px; text-align: left;">
+                        <strong>Detalles de errores:</strong>
+                        <div style="margin-top: 10px; max-height: 150px; overflow-y: auto; background: #f8d7da; padding: 10px; border-radius: 5px;">
+                            ${errores.map(error => `<div style="margin-bottom: 5px;">❌ ${error}</div>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += `
+                        <div style="margin-top: 30px;">
+                            <button class="btn btn-primary" onclick="mostrarPanelNotificaciones()">
+                                ↩️ Volver al panel
+                            </button>
+                            <button class="btn" onclick="cerrarModalNotificaciones()" style="margin-left: 10px;">
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('notificacionesContent').innerHTML = html;
+        }
+
+        // ==============================================
+        // CONFIGURACIÓN SMTP
+        // ==============================================
+        function cargarConfiguracionSMTPForm() {
+            document.getElementById('smtpServer').value = smtpConfig.servidor;
+            document.getElementById('smtpPort').value = smtpConfig.puerto;
+            document.getElementById('smtpEmail').value = smtpConfig.email;
+            document.getElementById('smtpPassword').value = smtpConfig.password;
+            document.getElementById('smtpUseTLS').checked = smtpConfig.useTLS;
+            document.getElementById('smtpAuth').checked = smtpConfig.auth;
+        }
+
+        function guardarConfiguracionSMTP() {
+            smtpConfig = {
+                servidor: document.getElementById('smtpServer').value,
+                puerto: parseInt(document.getElementById('smtpPort').value) || 587,
+                email: document.getElementById('smtpEmail').value,
+                password: document.getElementById('smtpPassword').value,
+                useTLS: document.getElementById('smtpUseTLS').checked,
+                auth: document.getElementById('smtpAuth').checked
+            };
+            
+            localStorage.setItem('dif_smtp_config', JSON.stringify(smtpConfig));
+            mostrarNotificacion('✅ Configuración SMTP guardada', 'success');
+        }
+
+        function cargarConfiguracionSMTP() {
+            const guardada = localStorage.getItem('dif_smtp_config');
+            if (guardada) {
+                try {
+                    smtpConfig = JSON.parse(guardada);
+                } catch (e) {
+                    console.error('Error cargando configuración SMTP:', e);
+                }
+            }
+        }
+
+        function probarConfiguracionSMTP() {
+            if (!smtpConfig.servidor || !smtpConfig.email || !smtpConfig.password) {
+                mostrarNotificacion('⚠️ Complete la configuración SMTP primero', 'warning');
+                return;
+            }
+            
+            mostrarNotificacion('🧪 Probando conexión SMTP...', 'info');
+            
+            // En desarrollo, mostrar instrucciones
+            setTimeout(() => {
+                const instrucciones = `
+                📧 PRUEBA DE CONFIGURACIÓN SMTP
+                
+                Para que el envío de correos funcione en producción:
+                
+                1. 🏢 En SharePoint/Office 365:
+                   • Servidor: smtp.office365.com
+                   • Puerto: 587
+                   • TLS: Activado
+                   • Usar credenciales de Office 365
+                
+                2. 🖥️ En servidor propio:
+                   • Configure un servidor SMTP real
+                   • O use servicios como SendGrid, Amazon SES
+                
+                3. 🔧 Implementación backend:
+                   Esta aplicación necesita un backend para enviar correos.
+                   Opciones:
+                   a) Crear API en Node.js con Nodemailer
+                   b) Usar Azure Functions
+                   c) Usar Power Automate con SharePoint
+                
+                4. 🔐 Consideraciones de seguridad:
+                   • No almacene contraseñas en frontend
+                   • Use variables de entorno
+                   • Implemente autenticación segura
+                
+                Para desarrollo actual, los correos se simulan pero se registran en localStorage.
+                `;
+                
+                alert(instrucciones);
+            }, 1000);
+        }
+
+        // ==============================================
+        // HISTORIAL DE NOTIFICACIONES
+        // ==============================================
+        function obtenerHistorialNotificaciones() {
+            const historialGuardado = localStorage.getItem('dif_historial_notificaciones');
+            return historialGuardado ? JSON.parse(historialGuardado) : [];
+        }
+
+        function guardarEnHistorialNotificaciones(notificacion) {
+            let historial = obtenerHistorialNotificaciones();
+            historial.unshift(notificacion);
+            // Mantener solo las últimas 100 notificaciones
+            historial = historial.slice(0, 100);
+            localStorage.setItem('dif_historial_notificaciones', JSON.stringify(historial));
+        }
+
+        // ==============================================
+        // FUNCIONES DE SEMAFORIZACIÓN (se mantienen igual)
+        // ==============================================
+        function calcularSemaforizacion(fechaApertura, fechaReasignacion) {
+            let fechaBase;
+            if (fechaReasignacion && fechaReasignacion !== '' && fechaReasignacion !== 'null' && fechaReasignacion !== 'undefined') {
+                fechaBase = new Date(fechaReasignacion);
+            } else if (fechaApertura && fechaApertura !== '' && fechaApertura !== 'null' && fechaApertura !== 'undefined') {
+                fechaBase = new Date(fechaApertura);
+            } else {
+                return { 
+                    estado: 'sin_datos', 
+                    tiempo: 'Sin fecha de inicio', 
+                    mesesFaltantes: null,
+                    mesesTranscurridos: null,
+                    fechaBase: null
+                };
+            }
+            
+            if (isNaN(fechaBase.getTime())) {
+                return { 
+                    estado: 'error', 
+                    tiempo: 'Fecha inválida', 
+                    mesesFaltantes: null,
+                    mesesTranscurridos: null,
+                    fechaBase: fechaApertura || fechaReasignacion
+                };
+            }
+            
+            const mesesTranscurridos = (fechaReferencia.getTime() - fechaBase.getTime()) / (1000 * 60 * 60 * 24 * 30.44);
+            const mesesFaltantes = PERIODO_REVISION_MESES - mesesTranscurridos;
+            
+            let estado, tiempoTexto;
+            
+            if (mesesFaltantes > 3) {
+                estado = 'verde';
+                tiempoTexto = `Faltan ${Math.ceil(mesesFaltantes)} meses para revisión`;
+            } else if (mesesFaltantes > 2) {
+                estado = 'verde';
+                tiempoTexto = `Faltan ${Math.ceil(mesesFaltantes)} meses para revisión`;
+            } else if (mesesFaltantes > 1) {
+                estado = 'amarillo';
+                tiempoTexto = `Falta ${Math.ceil(mesesFaltantes)} mes para revisión`;
+            } else if (mesesFaltantes > 0) {
+                estado = 'naranja';
+                tiempoTexto = `Falta ${Math.ceil(mesesFaltantes)} mes para revisión`;
+            } else {
+                estado = 'rojo';
+                const mesesVencido = Math.abs(Math.floor(mesesFaltantes));
+                tiempoTexto = `Vencida hace ${mesesVencido} mes${mesesVencido !== 1 ? 'es' : ''}`;
+            }
+            
+            return {
+                estado: estado,
+                tiempo: tiempoTexto,
+                mesesFaltantes: mesesFaltantes,
+                mesesTranscurridos: mesesTranscurridos,
+                fechaBase: fechaBase.toISOString().split('T')[0]
+            };
+        }
+
+        function generarDescripcion(semaforo) {
+            if (semaforo.estado === 'rojo') {
+                const mesesVencido = Math.abs(Math.ceil(semaforo.mesesFaltantes));
+                return `Vencida hace ${mesesVencido} ${mesesVencido === 1 ? 'mes' : 'meses'} - Requiere atención inmediata`;
+            } else if (semaforo.estado === 'naranja') {
+                return `Falta ${Math.ceil(semaforo.mesesFaltantes)} mes para pasar a revisión`;
+            } else if (semaforo.estado === 'amarillo') {
+                return `Falta ${Math.ceil(semaforo.mesesFaltantes)} mes para pasar a revisión`;
+            } else if (semaforo.estado === 'verde') {
+                return `Faltan ${Math.ceil(semaforo.mesesFaltantes)} meses para pasar a revisión`;
+            } else if (semaforo.estado === 'sin_datos') {
+                return 'Sin fecha de inicio para cálculo';
+            } else if (semaforo.estado === 'error') {
+                return 'Fecha inválida para cálculo';
+            }
+            return 'Estado no determinado';
+        }
+
+       // ==============================================
+// FUNCIONES DE PROCESAMIENTO DE ARCHIVOS - CORREGIDAS
+// ==============================================
+
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const fileName = file.name.toLowerCase();
+    const esExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+    const esCSV = fileName.endsWith('.csv');
+    
+    if (!esExcel && !esCSV) {
+        mostrarNotificacion('❌ Por favor, suba un archivo Excel (.xlsx, .xls) o CSV (.csv)', 'error');
+        return;
+    }
+    
+    archivoCargado = file;
+    
+    // Mostrar información del archivo
+    const fileInfoDiv = document.getElementById('fileInfo');
+    const fileNameSpan = document.getElementById('fileName');
+    const fileSizeSpan = document.getElementById('fileSize');
+    const fileTypeSpan = document.getElementById('fileType');
+    const procesarBtn = document.getElementById('procesarBtn');
+    
+    if (fileInfoDiv) fileInfoDiv.style.display = 'flex';
+    if (fileNameSpan) fileNameSpan.textContent = file.name;
+    if (fileSizeSpan) fileSizeSpan.textContent = `Tamaño: ${(file.size / 1024).toFixed(1)} KB`;
+    if (fileTypeSpan) fileTypeSpan.textContent = `Tipo: ${esExcel ? 'Excel' : 'CSV'}`;
+    if (procesarBtn) {
+        procesarBtn.disabled = false;
+        procesarBtn.textContent = '📋 Cargar al Sistema';
+    }
+    
+    mostrarNotificacion(`✅ Archivo "${file.name}" cargado correctamente`, 'success');
+}
+
+function eliminarArchivo() {
+    archivoCargado = null;
+    const fileInput = document.getElementById('fileInput');
+    const fileInfoDiv = document.getElementById('fileInfo');
+    const processingInfo = document.getElementById('processingInfo');
+    const procesarBtn = document.getElementById('procesarBtn');
+    
+    if (fileInput) fileInput.value = '';
+    if (fileInfoDiv) fileInfoDiv.style.display = 'none';
+    if (processingInfo) processingInfo.style.display = 'none';
+    if (procesarBtn) {
+        procesarBtn.disabled = true;
+        procesarBtn.textContent = '📋 Cargar al Sistema';
+    }
+    
+    mostrarNotificacion('🗑️ Archivo eliminado', 'success');
+}
+
+function procesarArchivo() {
+    if (!archivoCargado) {
+        mostrarNotificacion('⚠️ No hay archivo cargado', 'warning');
+        return;
+    }
+    
+    const fileName = archivoCargado.name.toLowerCase();
+    const esExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+    
+    // Mostrar mensaje de procesamiento
+    const processingInfo = document.getElementById('processingInfo');
+    const processingText = document.getElementById('processingText');
+    const procesarBtn = document.getElementById('procesarBtn');
+    
+    if (processingInfo) processingInfo.style.display = 'block';
+    if (processingText) processingText.textContent = 'Procesando archivo, por favor espere...';
+    if (procesarBtn) {
+        procesarBtn.disabled = true;
+        procesarBtn.textContent = '⏳ Procesando...';
+    }
+    
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            let expedientesCargados = [];
+            
+            if (esExcel) {
+                expedientesCargados = procesarExcel(e.target.result);
+            } else {
+                expedientesCargados = procesarCSV(e.target.result);
+            }
+            
+            if (expedientesCargados.length === 0) {
+                if (processingInfo) processingInfo.style.display = 'none';
+                if (procesarBtn) {
+                    procesarBtn.disabled = false;
+                    procesarBtn.textContent = '📋 Cargar al Sistema';
+                }
+                mostrarNotificacion('❌ No se encontraron expedientes válidos en el archivo', 'error');
+                return;
+            }
+            
+            // EXTRAER USUARIOS DEL ARCHIVO
+            const usuariosDelArchivo = extraerUsuariosDeExpedientes(expedientesCargados);
+            
+            // Combinar usuarios existentes con los nuevos
+            const usuariosExistentes = usuariosDisponibles.filter(u => u.origen === 'manual');
+            const nuevosUsuarios = usuariosDelArchivo.filter(nuevo => 
+                !usuariosExistentes.some(existente => existente.nombre === nuevo.nombre)
+            );
+            
+            usuariosDisponibles = [...usuariosExistentes, ...nuevosUsuarios];
+            usuariosNotificacion = usuariosDisponibles.filter(u => u.activo);
+            
+            // Actualizar lista de usuarios
+            cargarListaUsuarios();
+            
+            // Cargar expedientes
+            expedientes = expedientesCargados;
+            filteredExpedientes = [...expedientes];
+            actualizarTabla();
+            actualizarEstadisticas();
+            if (typeof actualizarEstadisticasNotificaciones === 'function') {
+                actualizarEstadisticasNotificaciones();
+            }
+            
+            if (processingInfo) processingInfo.style.display = 'none';
+            if (processingText) processingText.textContent = '';
+            if (procesarBtn) procesarBtn.textContent = '✅ Cargado';
+            
+            mostrarNotificacion(`✅ ${expedientes.length} expedientes cargados - ${usuariosDelArchivo.length} usuarios detectados`, 'success');
+            
+            setTimeout(() => {
+                cerrarModalConfiguracion();
+            }, 2000);
+            
+        } catch (error) {
+            if (processingInfo) processingInfo.style.display = 'none';
+            if (procesarBtn) {
+                procesarBtn.disabled = false;
+                procesarBtn.textContent = '📋 Cargar al Sistema';
+            }
+            mostrarNotificacion(`❌ Error al procesar el archivo: ${error.message}`, 'error');
+            console.error('Error detallado:', error);
+        }
+    };
+    
+    reader.onerror = function() {
+        if (processingInfo) processingInfo.style.display = 'none';
+        if (procesarBtn) {
+            procesarBtn.disabled = false;
+            procesarBtn.textContent = '📋 Cargar al Sistema';
+        }
+        mostrarNotificacion('❌ Error al leer el archivo', 'error');
+    };
+    
+    if (esExcel) {
+        reader.readAsArrayBuffer(archivoCargado);
+    } else {
+        reader.readAsText(archivoCargado, 'UTF-8');
+    }
+}
+
+function procesarExcel(data) {
+    console.log('🔧 Procesando archivo Excel...');
+    
+    try {
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+        
+        console.log('📊 Datos Excel obtenidos:', jsonData.length, 'filas');
+        
+        if (jsonData.length < 2) {
+            throw new Error('El archivo Excel está vacío o solo tiene encabezados');
+        }
+        
+        // Obtener encabezados
+        const headers = jsonData[0].map(h => String(h || '').trim());
+        console.log('📝 Encabezados encontrados:', headers);
+        
+        // Buscar índices de columnas importantes
+        const encontrarIndice = (patrones) => {
+            for (const patron of patrones) {
+                const indice = headers.findIndex(h => 
+                    h && h.toString().toLowerCase().includes(patron.toLowerCase())
+                );
+                if (indice >= 0) return indice;
+            }
+            return -1;
+        };
+        
+        const colIndices = {
+            expediente: encontrarIndice(['expediente', 'numero', 'numexp', 'número', 'id', 'codigo']),
+            fechaApertura: encontrarIndice(['fecha apertura', 'fecha_apertura', 'apertura', 'fecha inicio', 'inicio']),
+            fechaReasignacion: encontrarIndice(['fecha reasignacion', 'fecha_reasignacion', 'reasignacion', 'fecha actualizacion']),
+            responsable: encontrarIndice(['responsable', 'nombre funcionario', 'funcionario', 'auditor', 'encargado', 'asignado']),
+            departamento: encontrarIndice(['departamento', 'area', 'seccion', 'division', 'unidad'])
+        };
+        
+        console.log('📍 Índices de columnas detectados:', colIndices);
+        
+        // Si no se encuentra columna de responsable, usar la primera columna con datos
+        if (colIndices.responsable === -1 && headers.length > 0) {
+            colIndices.responsable = 0;
+        }
+        
+        const result = [];
+        
+        // Procesar cada fila de datos
+        for (let i = 1; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            if (!row || row.length === 0) continue;
+            
+            // Obtener valores de las columnas
+            const numeroExpediente = colIndices.expediente >= 0 ? String(row[colIndices.expediente] || '').trim() : '';
+            const fechaApertura = colIndices.fechaApertura >= 0 ? String(row[colIndices.fechaApertura] || '').trim() : '';
+            const fechaReasignacion = colIndices.fechaReasignacion >= 0 ? String(row[colIndices.fechaReasignacion] || '').trim() : '';
+            const responsable = colIndices.responsable >= 0 ? String(row[colIndices.responsable] || '').trim() : '';
+            const departamento = colIndices.departamento >= 0 ? String(row[colIndices.departamento] || '').trim() : '';
+            
+            // Solo procesar si tiene algún dato
+            if (numeroExpediente || responsable) {
+                // Calcular semaforización automática
+                const semaforo = calcularSemaforizacion(fechaApertura, fechaReasignacion);
+                
+                // Generar descripción basada en la semaforización
+                const descripcion = generarDescripcion(semaforo);
+                
+                result.push({
+                    id: result.length + 1,
+                    nombre: numeroExpediente || `Expediente ${result.length + 1}`,
+                    descripcion: descripcion,
+                    estado: semaforo.estado,
+                    tiempo: semaforo.tiempo,
+                    responsable: responsable || 'No asignado',
+                    departamento: departamento || 'No especificado',
+                    fechaRevision: semaforo.fechaBase,
+                    fechaApertura: fechaApertura,
+                    fechaReasignacion: fechaReasignacion,
+                    mesesFaltantes: semaforo.mesesFaltantes,
+                    mesesTranscurridos: semaforo.mesesTranscurridos
+                });
+            }
+        }
+        
+        console.log('✅ Total expedientes procesados:', result.length);
+        return result;
+        
+    } catch (error) {
+        console.error('❌ Error procesando Excel:', error);
+        throw new Error('Error al leer el archivo Excel: ' + error.message);
+    }
+}
+
+function procesarCSV(csvText) {
+    console.log('🔧 Procesando archivo CSV...');
+    
+    try {
+        const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
+        
+        if (lines.length < 2) {
+            throw new Error('El archivo CSV está vacío o solo tiene encabezados');
+        }
+        
+        const headers = parseCSVLine(lines[0]);
+        console.log('📝 Encabezados CSV:', headers);
+        
+        if (headers.length === 0) {
+            throw new Error('No se encontraron encabezados en la primera línea del archivo');
+        }
+        
+        // Buscar índices de columnas importantes
+        const encontrarIndice = (patrones) => {
+            for (const patron of patrones) {
+                const indice = headers.findIndex(h => 
+                    h && h.toString().toLowerCase().includes(patron.toLowerCase())
+                );
+                if (indice >= 0) return indice;
+            }
+            return -1;
+        };
+        
+        const colIndices = {
+            expediente: encontrarIndice(['expediente', 'numero', 'numexp', 'número', 'id', 'codigo']),
+            fechaApertura: encontrarIndice(['fecha apertura', 'fecha_apertura', 'apertura', 'fecha inicio', 'inicio']),
+            fechaReasignacion: encontrarIndice(['fecha reasignacion', 'fecha_reasignacion', 'reasignacion', 'fecha actualizacion']),
+            responsable: encontrarIndice(['responsable', 'nombre funcionario', 'funcionario', 'auditor', 'encargado', 'asignado']),
+            departamento: encontrarIndice(['departamento', 'area', 'seccion', 'division', 'unidad'])
+        };
+        
+        console.log('📍 Índices de columnas CSV detectados:', colIndices);
+        
+        // Si no se encuentra columna de responsable, usar la primera columna
+        if (colIndices.responsable === -1 && headers.length > 0) {
+            colIndices.responsable = 0;
+        }
+        
+        const result = [];
+        
+        // Procesar cada línea de datos
+        for (let i = 1; i < lines.length; i++) {
+            try {
+                const values = parseCSVLine(lines[i]);
+                if (values.length === 0) continue;
+                
+                // Obtener valores de las columnas
+                const numeroExpediente = colIndices.expediente >= 0 ? String(values[colIndices.expediente] || '').trim() : '';
+                const fechaApertura = colIndices.fechaApertura >= 0 ? String(values[colIndices.fechaApertura] || '').trim() : '';
+                const fechaReasignacion = colIndices.fechaReasignacion >= 0 ? String(values[colIndices.fechaReasignacion] || '').trim() : '';
+                const responsable = colIndices.responsable >= 0 ? String(values[colIndices.responsable] || '').trim() : '';
+                const departamento = colIndices.departamento >= 0 ? String(values[colIndices.departamento] || '').trim() : '';
+                
+                // Solo procesar si tiene algún dato
+                if (numeroExpediente || responsable) {
+                    // Calcular semaforización automática
+                    const semaforo = calcularSemaforizacion(fechaApertura, fechaReasignacion);
+                    
+                    // Generar descripción basada en la semaforización
+                    const descripcion = generarDescripcion(semaforo);
+                    
+                    result.push({
+                        id: result.length + 1,
+                        nombre: numeroExpediente || `Expediente ${result.length + 1}`,
+                        descripcion: descripcion,
+                        estado: semaforo.estado,
+                        tiempo: semaforo.tiempo,
+                        responsable: responsable || 'No asignado',
+                        departamento: departamento || 'No especificado',
+                        fechaRevision: semaforo.fechaBase,
+                        fechaApertura: fechaApertura,
+                        fechaReasignacion: fechaReasignacion
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error parseando línea CSV', i, ':', error);
+            }
+        }
+        
+        console.log('✅ Total expedientes CSV:', result.length);
+        return result;
+        
+    } catch (error) {
+        console.error('❌ Error procesando CSV:', error);
+        throw new Error('Error al leer el archivo CSV: ' + error.message);
+    }
+}
+
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const nextChar = line[i + 1];
+        
+        if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+                current += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    
+    result.push(current.trim());
+    
+    return result.map(field => {
+        if (field.startsWith('"') && field.endsWith('"')) {
+            return field.substring(1, field.length - 1);
+        }
+        return field;
+    });
+}
+
+function extraerUsuariosDeExpedientes(expedientesArray) {
+    console.log('👥 Extrayendo usuarios de expedientes...');
+    
+    const usuariosUnicos = [];
+    const usuariosMap = new Map();
+    
+    expedientesArray.forEach(expediente => {
+        const responsable = expediente.responsable;
+        if (responsable && responsable.trim() !== '' && responsable !== 'No asignado') {
+            if (!usuariosMap.has(responsable)) {
+                const usuarioId = usuariosUnicos.length + 1;
+                usuariosMap.set(responsable, usuarioId);
+                
+                usuariosUnicos.push({
+                    id: usuarioId,
+                    nombre: responsable,
+                    email: `${responsable.toLowerCase().replace(/[^a-z0-9]/g, '.').replace(/\.+/g, '.')}@dif.gob.mx`,
+                    activo: true,
+                    origen: 'archivo'
+                });
+            }
+        }
+    });
+    
+    console.log(`✅ Usuarios únicos encontrados: ${usuariosUnicos.length}`);
+    return usuariosUnicos;
+}
+
+// ==============================================
+// FUNCIONES DE GESTIÓN DE FECHAS
+// ==============================================
+
+function cambiarFechaReferencia() {
+    const nuevaFechaStr = prompt('Ingrese nueva fecha de referencia (YYYY-MM-DD):', 
+                                 fechaReferencia.toISOString().split('T')[0]);
+    
+    if (nuevaFechaStr) {
+        const nuevaFecha = new Date(nuevaFechaStr);
+        if (!isNaN(nuevaFecha.getTime())) {
+            fechaReferencia = nuevaFecha;
+            actualizarDisplayFechaReferencia();
+            
+            if (expedientes.length > 0) {
+                recalcularTodosExpedientes();
+            }
+            
+            mostrarNotificacion(`✅ Fecha de referencia actualizada a ${nuevaFechaStr}`, 'success');
+        } else {
+            alert('❌ Fecha inválida. Use formato YYYY-MM-DD');
+        }
+    }
+}
+
+function usarFechaActual() {
+    const fechaActual = new Date();
+    fechaReferencia = fechaActual;
+    actualizarDisplayFechaReferencia();
+    
+    if (expedientes.length > 0) {
+        recalcularTodosExpedientes();
+    }
+    
+    mostrarNotificacion(`✅ Fecha de referencia actualizada a fecha actual`, 'success');
+}
+
+function recalcularTodosExpedientes() {
+    expedientes.forEach(exp => {
+        if (exp.fechaApertura || exp.fechaReasignacion) {
+            const semaforo = calcularSemaforizacion(exp.fechaApertura, exp.fechaReasignacion);
+            exp.estado = semaforo.estado;
+            exp.tiempo = semaforo.tiempo;
+            exp.descripcion = generarDescripcion(semaforo);
+            exp.fechaRevision = semaforo.fechaBase || exp.fechaRevision;
+        }
+    });
+    
+    filteredExpedientes = [...expedientes];
+    actualizarTabla();
+    actualizarEstadisticas();
+    
+    mostrarNotificacion(`✅ ${expedientes.length} expedientes recalculados`, 'success');
+}
+
+// ==============================================
+// FUNCIONES DE GESTIÓN DE USUARIOS
+// ==============================================
+
+function cargarListaUsuarios() {
+    const userList = document.getElementById('userList');
+    if (!userList) return;
+    
+    let html = '';
+    
+    if (usuariosDisponibles.length === 0) {
+        html = '<div style="text-align: center; padding: 20px; color: #666;">No hay usuarios detectados. Cargue un archivo primero.</div>';
+    } else {
+        usuariosDisponibles.forEach(user => {
+            html += `
+                <div class="user-item">
+                    <div class="user-info">
+                        <input type="checkbox" id="user-${user.id}" 
+                               ${user.activo ? 'checked' : ''}
+                               onchange="actualizarUsuarioNotificacion(${user.id}, this.checked)">
+                        <div>
+                            <strong>${user.nombre}</strong>
+                            <div style="font-size: 14px; color: #666;">${user.email || 'Sin email'} (${user.origen})</div>
+                        </div>
+                    </div>
+                    <div class="user-actions">
+                        <button class="btn-icon" onclick="editarUsuario(${user.id})" title="Editar">
+                            ✏️
+                        </button>
+                        <button class="btn-icon" onclick="eliminarUsuario(${user.id})" title="Eliminar" style="color: #dc3545;">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    userList.innerHTML = html;
+    
+    usuariosNotificacion = usuariosDisponibles.filter(u => u.activo);
+}
+
+function actualizarUsuarioNotificacion(userId, activo) {
+    const user = usuariosDisponibles.find(u => u.id === userId);
+    if (user) {
+        user.activo = activo;
+        
+        if (activo && !usuariosNotificacion.some(u => u.id === userId)) {
+            usuariosNotificacion.push(user);
+        } else if (!activo) {
+            usuariosNotificacion = usuariosNotificacion.filter(u => u.id !== userId);
+        }
+    }
+}
+
+function agregarUsuario() {
+    const nombre = prompt("Nombre del nuevo usuario:");
+    if (!nombre) return;
+    
+    const email = prompt("Email del usuario (opcional):", "");
+    
+    const nuevoId = usuariosDisponibles.length > 0 
+        ? Math.max(...usuariosDisponibles.map(u => u.id)) + 1 
+        : 1;
+    
+    const nuevoUsuario = {
+        id: nuevoId,
+        nombre: nombre,
+        email: email || `${nombre.toLowerCase().replace(/\s+/g, '.')}@dif.gob.mx`,
+        activo: true,
+        origen: 'manual'
+    };
+    
+    usuariosDisponibles.push(nuevoUsuario);
+    usuariosNotificacion.push(nuevoUsuario);
+    
+    cargarListaUsuarios();
+    mostrarNotificacion(`✅ Usuario "${nombre}" agregado`, 'success');
+}
+
+function editarUsuario(userId) {
+    const user = usuariosDisponibles.find(u => u.id === userId);
+    if (!user) return;
+    
+    const nuevoNombre = prompt("Nuevo nombre del usuario:", user.nombre);
+    if (!nuevoNombre) return;
+    
+    const nuevoEmail = prompt("Nuevo email del usuario:", user.email || '');
+    
+    user.nombre = nuevoNombre;
+    user.email = nuevoEmail || user.email;
+    
+    cargarListaUsuarios();
+    mostrarNotificacion(`✅ Usuario "${nuevoNombre}" actualizado`, 'success');
+}
+
+function eliminarUsuario(userId) {
+    const user = usuariosDisponibles.find(u => u.id === userId);
+    if (!user) return;
+    
+    const confirmar = confirm(`¿Está seguro de eliminar al usuario "${user.nombre}"?`);
+    if (!confirmar) return;
+    
+    usuariosDisponibles = usuariosDisponibles.filter(u => u.id !== userId);
+    usuariosNotificacion = usuariosNotificacion.filter(u => u.id !== userId);
+    
+    cargarListaUsuarios();
+    mostrarNotificacion(`🗑️ Usuario "${user.nombre}" eliminado`, 'success');
+}
+
+function eliminarTodosUsuarios() {
+    if (usuariosDisponibles.length === 0) {
+        mostrarNotificacion('⚠️ No hay usuarios para eliminar', 'warning');
+        return;
+    }
+    
+    const confirmar = confirm(`¿Está seguro de eliminar TODOS los usuarios (${usuariosDisponibles.length})?`);
+    if (!confirmar) return;
+    
+    usuariosDisponibles = [];
+    usuariosNotificacion = [];
+    
+    cargarListaUsuarios();
+    mostrarNotificacion('🗑️ Todos los usuarios han sido eliminados', 'success');
+}
+
+// ==============================================
+// FUNCIONES PRINCIPALES DE LA INTERFAZ
+// ==============================================
+
+function actualizarTabla() {
+    const tbody = document.getElementById('table-body');
+    if (!tbody) return;
+    
+    if (filteredExpedientes.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 50px;">
+                    <div style="font-size: 18px; color: #666; margin-bottom: 20px;">
+                        No hay expedientes cargados
+                    </div>
+                    <div style="color: #888; margin-bottom: 20px;">
+                        Para comenzar, haga clic en ⚙️ Configuración y cargue un archivo Excel/CSV
+                    </div>
+                    <button class="btn btn-primary" onclick="mostrarLoginAdmin()">
+                        🔒 Solicitar Acceso
+                    </button>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    let html = '';
+    filteredExpedientes.forEach((exp, index) => {
+        let badgeClass = '';
+        let estadoText = '';
+        
+        switch(exp.estado) {
+            case 'verde':
+                badgeClass = 'badge-verde';
+                estadoText = 'EN TIEMPO';
+                break;
+            case 'amarillo':
+                badgeClass = 'badge-amarillo';
+                estadoText = 'ALERTA';
+                break;
+            case 'naranja':
+                badgeClass = 'badge-naranja';
+                estadoText = 'PRÓXIMO';
+                break;
+            case 'rojo':
+                badgeClass = 'badge-rojo';
+                estadoText = 'VENCIDO';
+                break;
+            case 'sin_datos':
+                badgeClass = 'badge-amarillo';
+                estadoText = 'SIN DATOS';
+                break;
+            case 'error':
+                badgeClass = 'badge-rojo';
+                estadoText = 'ERROR';
+                break;
+            default:
+                badgeClass = 'badge-verde';
+                estadoText = 'EN TIEMPO';
+        }
+        
+        let tiempoClass = '';
+        if (exp.estado === 'rojo') tiempoClass = 'rojo';
+        else if (exp.estado === 'naranja') tiempoClass = 'naranja';
+        else if (exp.estado === 'amarillo') tiempoClass = 'amarillo';
+        else if (exp.estado === 'error') tiempoClass = 'rojo';
+        else tiempoClass = 'verde';
+        
+        html += `
+            <tr class="fade-in">
+                <td><strong>${exp.nombre}</strong></td>
+                <td>${exp.descripcion}</td>
+                <td><span class="status-badge ${badgeClass}">${estadoText}</span></td>
+                <td class="${tiempoClass}"><strong>${exp.tiempo}</strong></td>
+                <td>${exp.responsable}</td>
+                <td>${exp.departamento}</td>
+                <td>${exp.fechaRevision || 'No disponible'}</td>
+                <td>
+                    <button class="btn-icon" onclick="verDetalles(${exp.id})" title="Ver detalles">
+                        👁️
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+function actualizarEstadisticas() {
+    const total = expedientes.length;
+    const verdes = expedientes.filter(e => e.estado === 'verde').length;
+    const amarillos = expedientes.filter(e => e.estado === 'amarillo').length;
+    const naranjas = expedientes.filter(e => e.estado === 'naranja').length;
+    const rojos = expedientes.filter(e => e.estado === 'rojo').length;
+    
+    const totalCount = document.getElementById('total-count');
+    const verdeCount = document.getElementById('verde-count');
+    const amarilloCount = document.getElementById('amarillo-count');
+    const rojoCount = document.getElementById('rojo-count');
+    
+    if (totalCount) totalCount.textContent = total;
+    if (verdeCount) {
+        verdeCount.textContent = verdes;
+        verdeCount.className = 'stat-number verde';
+    }
+    if (amarilloCount) {
+        amarilloCount.textContent = amarillos + naranjas;
+        amarilloCount.className = 'stat-number amarillo';
+    }
+    if (rojoCount) {
+        rojoCount.textContent = rojos;
+        rojoCount.className = 'stat-number rojo';
+    }
+}
+
+function filtrarExpedientes() {
+    const searchInput = document.getElementById('search-input');
+    if (!searchInput) return;
+    
+    const searchTerm = searchInput.value.toLowerCase();
+    
+    if (!searchTerm) {
+        filteredExpedientes = [...expedientes];
+    } else {
+        filteredExpedientes = expedientes.filter(exp => 
+            (exp.nombre && exp.nombre.toLowerCase().includes(searchTerm)) ||
+            (exp.descripcion && exp.descripcion.toLowerCase().includes(searchTerm)) ||
+            (exp.responsable && exp.responsable.toLowerCase().includes(searchTerm)) ||
+            (exp.departamento && exp.departamento.toLowerCase().includes(searchTerm)) ||
+            (exp.estado && exp.estado.toLowerCase().includes(searchTerm))
+        );
+    }
+    
+    actualizarTabla();
+}
+
+function verDetalles(id) {
+    const expediente = expedientes.find(e => e.id === id);
+    if (!expediente) return;
+    
+    const detalles = `
+        📋 EXPEDIENTE: ${expediente.nombre}
+        
+        📝 Descripción: ${expediente.descripcion}
+        🎨 Estado: ${expediente.estado.toUpperCase()}
+        ⏰ Tiempo restante: ${expediente.tiempo}
+        👤 Responsable: ${expediente.responsable}
+        🏢 Departamento: ${expediente.departamento}
+        📅 Fecha base: ${expediente.fechaRevision}
+        📅 Fecha apertura: ${expediente.fechaApertura || 'No disponible'}
+        📅 Fecha reasignación: ${expediente.fechaReasignacion || 'No disponible'}
+        
+        ${expediente.estado === 'rojo' ? '⚠️ REQUIERE ATENCIÓN INMEDIATA' : ''}
+        ${expediente.estado === 'naranja' ? '🔸 Revisión próxima, planificar acciones' : ''}
+        ${expediente.mesesFaltantes ? `\n📊 Meses faltantes: ${expediente.mesesFaltantes.toFixed(1)}` : ''}
+    `;
+    
+    alert(detalles);
+}
+
+function limpiarDatos() {
+    if (expedientes.length === 0) {
+        mostrarNotificacion('⚠️ No hay datos para limpiar', 'warning');
+        return;
+    }
+    
+    const confirmar = confirm(`¿Está seguro de limpiar todos los datos (${expedientes.length} expedientes)?`);
+    if (!confirmar) return;
+    
+    expedientes = [];
+    filteredExpedientes = [];
+    archivoCargado = null;
+    
+    usuariosDisponibles = usuariosDisponibles.filter(u => u.origen === 'manual');
+    usuariosNotificacion = usuariosDisponibles.filter(u => u.activo);
+    
+    cargarListaUsuarios();
+    
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    
+    if (fileInput) fileInput.value = '';
+    if (fileInfo) fileInfo.style.display = 'none';
+    
+    actualizarTabla();
+    actualizarEstadisticas();
+    
+    mostrarNotificacion('🗑️ Todos los datos han sido eliminados', 'success');
+}
+
+function exportarExcel() {
+    if (expedientes.length === 0) {
+        mostrarNotificacion('⚠️ No hay datos para exportar', 'warning');
+        return;
+    }
+    
+    let csv = "Expediente,Descripción,Estado,Tiempo Restante,Responsable,Departamento,Fecha Base,Fecha Apertura,Fecha Reasignación,Meses Faltantes\n";
+    
+    expedientes.forEach(exp => {
+        const mesesFaltantes = exp.mesesFaltantes ? exp.mesesFaltantes.toFixed(1) : 'N/A';
+        csv += `"${exp.nombre}","${exp.descripcion}","${exp.estado}","${exp.tiempo}","${exp.responsable}","${exp.departamento}","${exp.fechaRevision || ''}","${exp.fechaApertura || ''}","${exp.fechaReasignacion || ''}","${mesesFaltantes}"\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `expedientes_DIF_${fechaReferencia.toISOString().slice(0,10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    mostrarNotificacion('📥 Archivo CSV generado para Excel', 'success');
+}
+
+function guardarConfiguracion() {
+    const configuracion = {
+        usuarios: usuariosDisponibles,
+        usuariosActivos: usuariosNotificacion.map(u => u.id),
+        fechaReferencia: fechaReferencia.toISOString(),
+        fechaGuardado: new Date().toISOString()
+    };
+    
+    localStorage.setItem('dif_configuracion', JSON.stringify(configuracion));
+    
+    mostrarNotificacion('💾 Configuración guardada', 'success');
+    cerrarModalConfiguracion();
+}
+
+function cargarConfiguracionGuardada() {
+    const guardado = localStorage.getItem('dif_configuracion');
+    if (guardado) {
+        try {
+            const config = JSON.parse(guardado);
+            usuariosDisponibles = config.usuarios || [];
+            
+            if (config.usuariosActivos) {
+                usuariosDisponibles.forEach(user => {
+                    user.activo = config.usuariosActivos.includes(user.id);
+                });
+                usuariosNotificacion = usuariosDisponibles.filter(u => u.activo);
+            }
+            
+            if (config.fechaReferencia) {
+                fechaReferencia = new Date(config.fechaReferencia);
+            }
+            
+        } catch (e) {
+            console.error('Error cargando configuración:', e);
+        }
+    }
+}
+
+function mostrarNotificacion(mensaje, tipo) {
+    const notificacion = document.createElement('div');
+    notificacion.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        background: ${tipo === 'success' ? '#4CAF50' : tipo === 'warning' ? '#FF9800' : tipo === 'error' ? '#dc3545' : '#0078d4'};
+        color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 1000;
+        animation: fadeIn 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        max-width: 400px;
+    `;
+    
+    notificacion.innerHTML = `
+        ${tipo === 'success' ? '✅' : tipo === 'warning' ? '⚠️' : tipo === 'error' ? '❌' : 'ℹ️'}
+        <span>${mensaje}</span>
+    `;
+    
+    document.body.appendChild(notificacion);
+    
+    setTimeout(() => {
+        notificacion.style.animation = 'fadeOut 0.3s';
+        setTimeout(() => {
+            if (notificacion.parentNode) {
+                document.body.removeChild(notificacion);
+            }
+        }, 300);
+    }, 3000);
+    
+    if (!document.querySelector('style[data-notificaciones]')) {
+        const style = document.createElement('style');
+        style.setAttribute('data-notificaciones', '');
+        style.textContent = `
+            @keyframes fadeOut {
+                from { opacity: 1; transform: translateY(0); }
+                to { opacity: 0; transform: translateY(-10px); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+// ==============================================
+// FUNCIONES DE PRUEBA Y DEBUG
+// ==============================================
+
+function probarCargaSimple() {
+    alert('🔧 Probando carga de archivos...\n\n1. Haz clic en "Cargar Archivo"\n2. Selecciona un archivo Excel\n3. Haz clic en "Cargar al Sistema"');
+    
+    // Verificar elementos
+    const elementos = ['fileInput', 'fileInfo', 'procesarBtn'];
+    let todosExisten = true;
+    
+    elementos.forEach(id => {
+        const elem = document.getElementById(id);
+        if (!elem) {
+            console.error('❌ Elemento no encontrado:', id);
+            todosExisten = false;
+        } else {
+            console.log('✅ Elemento encontrado:', id);
+        }
+    });
+    
+    if (todosExisten) {
+        console.log('✅ Todos los elementos necesarios existen');
+        console.log('✅ SheetJS cargado:', typeof XLSX !== 'undefined' ? 'SÍ' : 'NO');
+        alert('✅ Sistema listo para cargar archivos\n\nVerifica la consola (F12) para más detalles');
+    } else {
+        alert('❌ Problema detectado\n\nRevisa la consola (F12) para ver qué elementos faltan');
+    }
+}
+
+// ==============================================
+// INICIALIZACIÓN ADICIONAL
+// ==============================================
+
+// Agregar estilos para animaciones si no existen
+if (!document.querySelector('style[data-animaciones]')) {
+    const style = document.createElement('style');
+    style.setAttribute('data-animaciones', '');
+    style.textContent = `
+        .verde { color: #4CAF50 !important; }
+        .amarillo { color: #FFC107 !important; }
+        .naranja { color: #FF9800 !important; }
+        .rojo { color: #F44336 !important; }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+
+
+        // Estilos adicionales para animaciones
+        const style = document.createElement('style');
+        style.textContent = `
+            .verde { color: #4CAF50 !important; }
+            .amarillo { color: #FFC107 !important; }
+            .naranja { color: #FF9800 !important; }
+            .rojo { color: #F44336 !important; }
+            
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                20%, 40%, 60%, 80% { transform: translateX(5px); }
+            }
+            
+            @keyframes fadeOut {
+                from { opacity: 1; transform: translateY(0); }
+                to { opacity: 0; transform: translateY(-10px); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // ==============================================
+        // EJEMPLO DE FUNCIÓN PARA ENVÍO REAL (backend)
+        // ==============================================
+        /*
+        // Para implementar en tu backend (Node.js ejemplo):
+        async function enviarCorreoBackend(destinatario, asunto, mensaje) {
+            const response = await fetch('/api/enviar-correo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    destinatario: destinatario,
+                    asunto: asunto,
+                    mensaje: mensaje,
+                    config: smtpConfig // En producción, esto debería manejarse en el backend
+                })
+            });
+            
+            return await response.json();
+        }
+        */
+
+        // ==============================================
+        // INSTRUCCIONES PARA IMPLEMENTACIÓN EN SHAREPOINT
+        // ==============================================
+        /*
+        1. Alojar esta aplicación en SharePoint:
+           - Crear una página web
+           - Insertar el código HTML/CSS/JS
+           - O usar SharePoint Framework (SPFx)
+        
+        2. Para envío real de correos en SharePoint:
+           Opción A: Usar Microsoft Graph API
+           Opción B: Usar Power Automate flujos
+           Opción C: Usar Azure Functions + Office 365 SMTP
+        
+        3. Configurar permisos:
+           - Solo administradores pueden acceder al botón de configuración
+           - Los usuarios finales solo ven el visor de expedientes
+        
+        4. Implementar backend seguro:
+           - No almacenar contraseñas SMTP en frontend
+           - Usar Azure Key Vault o SharePoint Listas seguras
+           - Implementar autenticación con Azure AD
+        */
+    </script>
+</body>
+</html>

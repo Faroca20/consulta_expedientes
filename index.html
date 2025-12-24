@@ -1155,26 +1155,26 @@
         // FUNCIONES AUXILIARES
         // ==============================================
         function extraerNombreSinDocumento(responsableCompleto) {
-            if (!responsableCompleto) return responsableCompleto;
-            
-            // Formato 1: "Juan Pérez - 12345678"
-            if (responsableCompleto.includes('-')) {
-                const partes = responsableCompleto.split('-');
-                return partes[0].trim();
-            }
-            
-            // Formato 2: "Juan Pérez 12345678"
-            const partes = responsableCompleto.split(' ');
-            const ultimaParte = partes[partes.length - 1];
-            
-            // Verificar si la última parte es un documento (solo números, largo típico)
-            if (/^\d+$/.test(ultimaParte) && ultimaParte.length >= 5) {
-                // Es un documento, eliminarlo
-                partes.pop();
-            }
-            
-            return partes.join(' ').trim();
-        }
+    if (!responsableCompleto) return 'Sin nombre';
+    
+    // Limpiar espacios extra
+    let nombre = responsableCompleto.trim();
+    
+    // Formato 1: "Juan Pérez - 12345678"
+    if (nombre.includes('-')) {
+        const partes = nombre.split('-');
+        nombre = partes[0].trim();
+    }
+    
+    // Formato 2: "Juan Pérez 12345678" (documento al final)
+    // Buscar números al final del string
+    const match = nombre.match(/^(.*?)(?:\s+\d+)$/);
+    if (match) {
+        nombre = match[1].trim();
+    }
+    
+    return nombre || responsableCompleto;
+}
 
         // ==============================================
         // INICIALIZACIÓN
@@ -1270,92 +1270,130 @@
             if (modal) modal.remove();
         }
 
-        function validarDocumentoUsuario() {
-            const documento = document.getElementById('documentoInput').value.trim();
-            const errorDiv = document.getElementById('errorDocumento');
+        // REEMPLAZA la función validarDocumentoUsuario() con esta versión mejorada:
 
-            if (!documento) {
-                errorDiv.style.display = 'block';
-                return;
-            }
+function validarDocumentoUsuario() {
+    const documento = document.getElementById('documentoInput').value.trim();
+    const errorDiv = document.getElementById('errorDocumento');
 
-            // Verificar si hay datos cargados
-            if (expedientes.length === 0) {
-                errorDiv.innerHTML = '❌ No hay datos cargados en el sistema<br>Contacte al administrador';
-                errorDiv.style.display = 'block';
-                return;
-            }
+    if (!documento) {
+        errorDiv.style.display = 'block';
+        return;
+    }
 
-            // Si es admin, acceso directo
-            if (documento === 'admin123' || documento === 'Extensiva2026') {
-                funcionarioActual = 'Administrador';
-                localStorage.setItem('dif_documento_usuario', 'Administrador');
-                mostrarExpedientesAdmin();
-                cerrarModalDocumento();
-                return;
-            }
+    // Verificar si hay datos cargados
+    if (expedientes.length === 0) {
+        errorDiv.innerHTML = '❌ No hay datos cargados en el sistema<br>Contacte al administrador';
+        errorDiv.style.display = 'block';
+        return;
+    }
 
-            // Buscar funcionario por documento
-            let funcionarioEncontrado = expedientes.find(e => 
-                e.responsable.includes(`- ${documento}`) || 
-                e.responsable.includes(documento) ||
-                e.responsable.toLowerCase().includes(documento.toLowerCase())
-            );
-
-            if (!funcionarioEncontrado) {
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            // Extraer SOLO EL NOMBRE (sin documento)
-            const nombreLimpio = extraerNombreSinDocumento(funcionarioEncontrado.responsable);
-            
-            // Guardar el NOMBRE limpio
-            funcionarioActual = nombreLimpio;
-            localStorage.setItem('dif_documento_usuario', nombreLimpio);
-
-            mostrarExpedientesFuncionario();
-            cerrarModalDocumento();
+    // Si es admin, acceso directo
+    if (documento === 'admin123' || documento === 'Extensiva2026') {
+        funcionarioActual = 'Administrador';
+        
+        // Intentar guardar en localStorage, pero continuar si falla
+        try {
+            localStorage.setItem('dif_documento_usuario', 'Administrador');
+        } catch (e) {
+            console.log("localStorage no disponible, usando sesión actual");
         }
+        
+        mostrarExpedientesAdmin();
+        cerrarModalDocumento();
+        return;
+    }
+
+    // Buscar funcionario por documento - intentar varias estrategias
+    let funcionarioEncontrado = null;
+    
+    // Estrategia 1: Buscar por documento exacto
+    funcionarioEncontrado = expedientes.find(e => 
+        e.responsable && (
+            e.responsable.includes(`- ${documento}`) || 
+            e.responsable.includes(` ${documento}`) ||
+            e.responsable.endsWith(documento)
+        )
+    );
+
+    // Estrategia 2: Buscar coincidencia parcial
+    if (!funcionarioEncontrado) {
+        funcionarioEncontrado = expedientes.find(e => 
+            e.responsable && e.responsable.toLowerCase().includes(documento.toLowerCase())
+        );
+    }
+
+    if (!funcionarioEncontrado) {
+        errorDiv.style.display = 'block';
+        return;
+    }
+
+    // Extraer SOLO EL NOMBRE (sin documento)
+    const nombreLimpio = extraerNombreSinDocumento(funcionarioEncontrado.responsable);
+    
+    // Guardar el NOMBRE limpio
+    funcionarioActual = nombreLimpio;
+    
+    // Intentar guardar en localStorage
+    try {
+        localStorage.setItem('dif_documento_usuario', nombreLimpio);
+    } catch (e) {
+        console.log("No se pudo guardar en localStorage, usando sesión actual");
+    }
+
+    mostrarExpedientesFuncionario();
+    cerrarModalDocumento();
+}
+
+        
 
         function mostrarExpedientesFuncionario() {
-            if (!funcionarioActual) return;
-            
-            console.log("Mostrando expedientes para:", funcionarioActual);
-            
-            // Buscar expedientes donde el responsable contenga el NOMBRE (no documento)
-            let expedientesFuncionario = expedientes.filter(exp => {
-                // Extraer nombre del responsable en el expediente
-                const nombreEnExpediente = extraerNombreSinDocumento(exp.responsable);
-                // Comparar con el nombre del funcionario actual
-                return nombreEnExpediente === funcionarioActual;
-            });
-            
-            // Si no encuentra, intentar coincidencia parcial
-            if (expedientesFuncionario.length === 0) {
-                console.log("Intentando búsqueda parcial...");
-                expedientesFuncionario = expedientes.filter(exp => {
-                    const nombreEnExpediente = extraerNombreSinDocumento(exp.responsable);
-                    return nombreEnExpediente.toLowerCase().includes(funcionarioActual.toLowerCase());
-                });
-            }
-            
-            if (expedientesFuncionario.length === 0) {
-                mostrarPantallaBienvenida(`No se encontraron expedientes para: ${funcionarioActual}`);
-                return;
-            }
-            
-            // Mostrar nombre limpio del funcionario
-            document.getElementById('userNameDisplay').style.display = 'block';
-            document.getElementById('userNameDisplay').textContent = `👤 ${funcionarioActual}`;
-            
-            filteredExpedientes = expedientesFuncionario;
-            actualizarTabla();
-            actualizarEstadisticas();
-            
-            // Mostrar siempre el botón de admin
-            document.querySelector('.config-button').style.display = 'flex';
-        }
+    if (!funcionarioActual) {
+        console.log("No hay funcionario actual, mostrando pantalla de bienvenida");
+        mostrarPantallaBienvenida();
+        return;
+    }
+    
+    console.log("Mostrando expedientes para:", funcionarioActual);
+    
+    // Buscar expedientes donde el responsable contenga el NOMBRE (no documento)
+    let expedientesFuncionario = expedientes.filter(exp => {
+        if (!exp.responsable) return false;
+        // Extraer nombre del responsable en el expediente
+        const nombreEnExpediente = extraerNombreSinDocumento(exp.responsable);
+        // Comparar con el nombre del funcionario actual
+        return nombreEnExpediente === funcionarioActual;
+    });
+    
+    console.log("Expedientes encontrados:", expedientesFuncionario.length);
+    
+    // Si no encuentra con nombre exacto, intentar coincidencia parcial
+    if (expedientesFuncionario.length === 0) {
+        console.log("Intentando búsqueda parcial...");
+        expedientesFuncionario = expedientes.filter(exp => {
+            if (!exp.responsable) return false;
+            const nombreEnExpediente = extraerNombreSinDocumento(exp.responsable);
+            return nombreEnExpediente.toLowerCase().includes(funcionarioActual.toLowerCase());
+        });
+    }
+    
+    if (expedientesFuncionario.length === 0) {
+        console.log("No se encontraron expedientes");
+        mostrarPantallaBienvenida(`No se encontraron expedientes para: ${funcionarioActual}`);
+        return;
+    }
+    
+    // Mostrar nombre limpio del funcionario
+    document.getElementById('userNameDisplay').style.display = 'block';
+    document.getElementById('userNameDisplay').textContent = `👤 ${funcionarioActual}`;
+    
+    filteredExpedientes = expedientesFuncionario;
+    actualizarTabla();
+    actualizarEstadisticas();
+    
+    // Mostrar siempre el botón de admin
+    document.querySelector('.config-button').style.display = 'flex';
+}
 
         function mostrarExpedientesAdmin() {
             // Admin ve todos los expedientes
